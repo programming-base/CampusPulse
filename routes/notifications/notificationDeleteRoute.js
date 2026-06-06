@@ -1,0 +1,51 @@
+import express from "express";
+import verifyAccessToken from "../../middlewares/verifyAccessToken";
+import mongoose from "mongoose";
+import notificationModel from "../../database/schema/notificationSchema/notificationSchema";
+import messageSchema from "../../database/schema/chatSchema/messageSchema";
+const router=express.Router();
+
+router.delete('/notificaions/:notificationId',verifyAccessToken,async (req,res)=>{
+    try{
+        const {notificationId}=req.params;
+        if(!mongoose.Types.ObjectId.isValid(notificationId)){
+            return res.status(400).json({
+                success:false,
+                message:'Invalid notification ID'
+            })
+        }
+        const deleteNotification=await notificationModel.findByIdAndDelete(notificationId);
+
+        res.status(200).json({
+            success:true,
+            message:"Notification deleted"
+        })
+
+    }catch(error){
+        res.status(500).json({
+            success:false,
+            message:'Internal server error'
+        })
+    }
+})
+
+router.delete('/notification/clear-read',verifyAccessToken,async(req,res)=>{
+    try{
+        const deleteAllNotification=await notificationModel.deleteMany({recipient:req.user.userId,isRead:true})
+        if(!deleteAllNotification.acknowledged){
+            return res.status(500).json({
+                success:false,
+                message:'Internal server error'
+            })
+        }
+        res.status(200).json({
+            success:true,
+            message:'Read notifications cleared'
+        })
+    }catch(error){
+        res.status(500).json({
+            success:false,
+            message:"Internal server error"
+        })
+    }
+})

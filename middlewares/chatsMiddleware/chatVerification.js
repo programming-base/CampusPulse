@@ -20,3 +20,4 @@ const chatVerification=async(req,res,next)=>{
     }
 
 }
+export default chatVerification;

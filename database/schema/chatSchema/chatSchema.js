@@ -1,12 +1,13 @@
 import mongoose from "mongoose";
 
 const chatSchema = new mongoose.Schema({
-
     type: {
         type: String,
         enum: ["dm", "group"]
     },
-
+    description:{
+        type:String
+    },
     participants: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: "Users"
@@ -16,7 +17,6 @@ const chatSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "Message"
     },
-
     messageCount: {
         type: Number,
         default: 0
