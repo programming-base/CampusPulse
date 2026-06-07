@@ -1,6 +1,10 @@
 import mongoose from "mongoose";
 
 const chatSchema = new mongoose.Schema({
+    admin:{
+        type:mongoose.Schema.Types.ObjectId,
+        ref:'Users'
+    },
     type: {
         type: String,
         enum: ["dm", "group"]
