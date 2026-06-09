@@ -49,7 +49,7 @@ router.delete('/posts/:postId/comments/:commentId',verifyAccessToken,postValidat
 
 })
 
-router.delete('/posts/:postId/likes',verifyAccessToken,postValidation,async(req,res)=>{
+router.delete('/posts/:postId/like',verifyAccessToken,postValidation,async(req,res)=>{
     try{
         const postId=req.post._id.toString();
         const userId=req.user.userId.toString();

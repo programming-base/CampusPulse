@@ -66,7 +66,7 @@ router.post('/posts/:postId/comments',verifyAccessToken,postValidation,async(req
 })
 
 
-router.post('/posts/:postId/likes',verifyAccessToken,postValidation,async (req,res)=>{
+router.post('/posts/:postId/like',verifyAccessToken,postValidation,async (req,res)=>{
     try{
         const postId=req.post._id;
         const alreadyLiked=await likeModel.findOne({userId:req.user.userId,postId:postId,targetType:'post'});

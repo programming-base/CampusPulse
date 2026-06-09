@@ -69,7 +69,7 @@ router.get('/users/:userId/followers',verifyAccessToken,userValidation,async(req
         res.status(500).json({error:'Internal server error '})
     }
 })
-router.get('/user/:userId/followings',verifyAccessToken,userValidation,async(req,res)=>{
+router.get('/user/:userId/following',verifyAccessToken,userValidation,async(req,res)=>{
     try{
         const targetUserId=req.presentUser._id;
         let {page,limit}=req.query;

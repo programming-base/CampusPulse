@@ -5,7 +5,7 @@ import notificationModel from "../../database/schema/notificationSchema/notifica
 import messageSchema from "../../database/schema/chatSchema/messageSchema";
 const router=express.Router();
 
-router.delete('/notificaions/:notificationId',verifyAccessToken,async (req,res)=>{
+router.delete('/notifications/:notificationId',verifyAccessToken,async (req,res)=>{
     try{
         const {notificationId}=req.params;
         if(!mongoose.Types.ObjectId.isValid(notificationId)){
@@ -29,7 +29,7 @@ router.delete('/notificaions/:notificationId',verifyAccessToken,async (req,res)=
     }
 })
 
-router.delete('/notification/clear-read',verifyAccessToken,async(req,res)=>{
+router.delete('/notifications/clear-read',verifyAccessToken,async(req,res)=>{
     try{
         const deleteAllNotification=await notificationModel.deleteMany({recipient:req.user.userId,isRead:true})
         if(!deleteAllNotification.acknowledged){

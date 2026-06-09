@@ -1,4 +1,4 @@
-import express from "express";
+import express, { text } from "express";
 import verifyAccessToken from "../../middlewares/verifyAccessToken.js";
 import mongoose from "mongoose";
 import chatModel from "../../database/schema/chatSchema/chatSchema.js";
@@ -8,25 +8,6 @@ import userModel from "../../database/schema/authSchema/userSchema.js";
 chatVerification;
 const router = express.Router();
 
-// router.post('/chats/dm',verifyAccessToken,async (req,res)=>{
-//     try{
-//         const {participantId}=req.body;
-//         if(!participantId){
-//             return res.status(400).json({error:'Missing field'});
-//         }
-//         if(!mongoose.Types.ObjectId.isValid(participantId)){
-//             return res.status(400).json({error:'Invalid field provided'})
-//         }
-//         let chatObject={
-//             type:'dm',
-//             participants:participantId,
-//             lastMessage:
-//         }
-//         const chat=await chatModel.create({})
-//     }catch(error){
-//         res.status(500).json({error:'Internal server error'})
-//     }
-// })
 router.post("/chats/group", verifyAccessToken, async (req, res) => {
   try {
     const { name, description, memberIds } = req.body;
@@ -53,24 +34,121 @@ router.post("/chats/group", verifyAccessToken, async (req, res) => {
   }
 });
 
-router.post("/chats/:chatId/messages", verifyAccessToken, async (req, res) => {
-  try {
-    //Request body check
-    const chat = req.body;
-    if (Object.keys(chat).length === 0) {
-      return res.status(400).json({
+// message document creation for chat
+router.post(
+  "/chats/dm/messages/:userId",
+  verifyAccessToken,
+  async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const messageData = req.body;
+      if (!messageData.text?.trim()) {
+        return res.status(400).json({
+          success: false,
+          message: "Message text is required",
+        });
+      }
+      if (!mongoose.Types.ObjectId.isValid(userId)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid chat ID or user ID",
+        });
+      }
+      const user = await userModel.findById(userId);
+      if (!user) {
+        return res.status(400).json({
+          success: false,
+          message: "user does not exist",
+        });
+      }
+      let chat = await chatModel.findOne({
+        type: "dm",
+        participants: {
+          $all: [req.user.userId, userId],
+        },
+      });
+
+      if (!chat) {
+        const newChat = await chatModel.create({
+          type: "dm",
+          participants: [req.user.userId, userId],
+        });
+
+        chat = newChat;
+      }
+      const message = await messageModel.create({
+        chatId: chat._id,
+        sender: req.user.userId,
+        text: messageData.text,
+        type: messageData.type,
+      });
+      const updateChat = await chatModel.findByIdAndUpdate(
+        chatId,
+        {
+          $set: {
+            lastMessage: message.text,
+          },
+        },
+        { new: true },
+      );
+      if (!updateChat) {
+        await messageModel.findByIdAndDelete(message._id);
+        return res.status(404).json({
+          success: false,
+          message: "Chat does not exist",
+        });
+      }
+      res.status(201).json({
+        success: true,
+        data: message,
+      });
+    } catch (error) {
+      res.status(500).json({
         success: false,
-        message: "text field is empty",
+        message: "Internal server error",
+        error: error.message,
       });
     }
-    
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: "Internal server error",
-    });
-  }
-});
+  },
+);
+
+//message document creation for group chat
+router.post(
+  "/chats/:chatId/messages",
+  verifyAccessToken,
+  chatVerification,
+  async (req, res) => {
+    try {
+      //Request body check
+      const messageData = req.body;
+      if (!messageData.text?.trim()) {
+        return res.status(400).json({
+          success: false,
+          message: "Message text is required",
+        });
+      }
+
+      let messageObject = {
+        chatId: req.chat._id,
+        sender: req.user.userId,
+        text: message.text,
+        type: message.type,
+      };
+      const message = await messageModel.create(messageObject);
+
+      res.status(201).json({
+        success: true,
+        data: message,
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: "Internal server error",
+        error: error.message,
+      });
+    }
+  },
+);
 
 router.post(
   "/chats/:chatId/messages/:messageId/read",
