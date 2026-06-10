@@ -32,7 +32,7 @@ router.get('/posts',verifyAccessToken,async(req,res)=>{
         limit:limit,
         total:totalCount,
         totalPages:Math.ceil(totalCount/limit),
-        hasMore: page < totalPages
+        hasMore: page < totalCount
     }
     res.status(200).json({success:true,data:responseJson})
 })

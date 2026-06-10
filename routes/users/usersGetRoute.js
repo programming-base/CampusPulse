@@ -1,4 +1,4 @@
-import express, { response } from "express";
+import express from "express";
 import verifyAccessToken from "../../middlewares/verifyAccessToken.js";
 import userValidation from "../../middlewares/userValidation.js";
 import userModel from "../../database/schema/authSchema/userSchema.js";
@@ -7,7 +7,7 @@ import followingModel from "../../database/schema/followSchema/followingSchema.j
 const router = express.Router();
 
 
-router.get('/users/search',verifyAccessToken,userValidation,async(req,res)=>{
+router.get('/users/search',verifyAccessToken,async(req,res)=>{
     try{
         let {query,department,academicYear,college,page ,limit}=req.query;
         if(!query && !department){
@@ -26,7 +26,10 @@ router.get('/users/search',verifyAccessToken,userValidation,async(req,res)=>{
         const skip=(page-1)*limit
         const user=await userModel.find(searchJson).skip(skip).limit(limit);
         if(user.length===0){
-            return res.status(500).json({error:'Internal server error'})
+            return res.status(200).json({
+                success:true,
+                data:[]
+            })
         }
         let totalUsers=await userModel.find(searchJson)
         let totalPages=Math.ceil(totalUsers.length/limit)
@@ -42,7 +45,11 @@ router.get('/users/search',verifyAccessToken,userValidation,async(req,res)=>{
         res.status(200).json(responseJson)
 
     }catch(error){
-        res.status(500).json({error:'Internal server error '})
+        res.status(500).json({
+            success:false,
+            message:'Internal server error ',
+            error:error.message
+        })
     }
 })
 router.get('/users/:userId/followers',verifyAccessToken,userValidation,async(req,res)=>{
@@ -103,7 +110,7 @@ router.get('/users/:userId/is-following',verifyAccessToken,userValidation,async(
         if(targetUser===client) return res.status(200).json({success:true,isFollowing:false})
         const isFollowing=await followingModel.findOne({userId:client,followingId:targetUser});
         if(!isFollowing)return res.status(200).json({success:true,isFollowing:false})
-        req.status(200).json({success:true,data:{isFollowing:true}})
+        res.status(200).json({success:true,data:{isFollowing:true}})
     }catch(error){
         return res.status(500).json({error:'Internal server error'})
     }

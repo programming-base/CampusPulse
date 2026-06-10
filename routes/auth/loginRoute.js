@@ -23,7 +23,7 @@ router.post('/auth/login',async (req,res)=>{
             userId:user._id,
             email:email,
             type:'refresh'
-        },process.env.JWT_SECRET,{expiresIn:'7d'})
+        },process.env.JWT_REFRESH,{expiresIn:'7d'})
 
         if(!token){
             return res.status(500).json({error:'Internal server error'})

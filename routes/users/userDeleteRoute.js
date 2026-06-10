@@ -1,11 +1,11 @@
 import express from "express";
-import verifyRefreshToken from "../../middlewares/verifyAccessToken.js";
+import verifyAccessToken from "../../middlewares/verifyAccessToken.js";
 import userValidation from '../../middlewares/userValidation.js'
 import followingModel from "../../database/schema/followSchema/followingSchema.js";
 const router=express.Router();
 
 
-router.delete('/users/:userId/follow',verifyRefreshToken,userValidation,async (req,res)=>{
+router.delete('/users/:userId/follow',verifyAccessToken,userValidation,async (req,res)=>{
     try{
         const client =req.user.userId;
         const targetUser=req.presentUser._id.toString();

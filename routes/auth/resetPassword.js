@@ -75,7 +75,7 @@ router.post('/auth/reset-password',async (req,res)=>{
 
             const token = JWT.sign(
               { email, purpose: 'password-reset' },
-              process.env.JWT_SECRET,
+              process.env.JWT_ACEESS,
               { expiresIn: '10m' }
             );
 
@@ -94,7 +94,7 @@ router.post('/auth/reset-password',async (req,res)=>{
 
         let decodedToken;
         try {
-          decodedToken = JWT.verify(resetToken, process.env.JWT_SECRET);
+          decodedToken = JWT.verify(resetToken, process.env.JWT_ACCESS);
         } catch (_error) {
           return res.status(401).json({ error: 'Invalid or expired reset token' });
         }

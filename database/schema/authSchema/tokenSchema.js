@@ -3,7 +3,7 @@ const tokenSchema=new mongoose.Schema({
 
     userId:{
         type:mongoose.Schema.Types.ObjectId,
-        ref:'users',
+        ref:'Users',
         required:true
     },
     token:{
@@ -28,5 +28,5 @@ const tokenSchema=new mongoose.Schema({
         default: false
     },
 })
-const tokenModel=mongoose.model('token',tokenSchema);
+const tokenModel=mongoose.model('Token',tokenSchema);
 export default tokenModel;

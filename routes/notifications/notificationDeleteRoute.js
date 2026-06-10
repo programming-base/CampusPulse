@@ -49,3 +49,4 @@ router.delete('/notifications/clear-read',verifyAccessToken,async(req,res)=>{
         })
     }
 })
+export default router;

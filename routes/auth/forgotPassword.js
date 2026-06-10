@@ -9,7 +9,7 @@ import userModel from "../../database/schema/authSchema/userSchema.js";
 
 const router = express.Router();
 const OTP_MAX_ATTEMPTS = 5;
-const OTP_EXPIRY_MS = 10 * 60 * 1000
+const OTP_EXPIRY_MS = 10 * 60 * 1000;
 
 const createTransport = async () => {
   const { SMTP_HOST, SMTP_PORT, SMTP_SECURE, SMTP_USER, SMTP_PASS } =
@@ -51,87 +51,128 @@ const sendResetOtpMail = async (email, otp) => {
   return previewUrl || null;
 };
 
-router.post("/auth/forgot-password", async (res, req) => {
-
-    try{
-
-    
-    const { email, otp, forgotToken, newPassword } = req.body;
-    const isEmailPresent = (await userModel.findOne({ email: body.email }))
-        ? true
-        : false;
+router.post("/auth/forgot-password", async (req, res) => {
+  try {
+    const { email, otp, forgotPassToken, newPassword } = req.body;
+    const isEmailPresent = (await userModel.findOne({ email: email }))
+      ? true
+      : false;
     if (!isEmailPresent) {
-        return res.status(400).json({ message: "no email found" });
+      return res.status(400).json({
+        success: false,
+        message: "Email does not exist",
+      });
     }
-    const isVerified = Boolean(otp && forgotToken && newPassword);
-    if (!isVerified) {
-        const OTP = crypto.randomInt(100000, 1000000).toString();
-        const hashedOtp = bcrypt.hash(OTP, 10);
-        if (!hashedOtp)
-        return res.status(500).json({ message: "Internal server error" });
+    const isReqBodyPresent = Boolean(otp && forgotPassToken && newPassword);
+    if (!isReqBodyPresent) {
+      const OTP = crypto.randomInt(100000, 1000000).toString();
+      const hashedOtp = await bcrypt.hash(OTP, 10);
+      if (!hashedOtp)
+        return res.status().json({
+            success:false,
+            message: "Internal server error"
+        });
 
-        const token = JWT.sign(
+      const newToken = JWT.sign(
         {
-            email,
-            purpose: "forgot-passwaord-reset",
+          email,
+          purpose: "forgot-passwaord-reset",
         },
         process.env.JWT_SECRET,
         { expiresIn: "5m" },
-        );
-        await otpModel.deleteMany({ email: body.email });
-        await otpModel.create({
-        email: body.email,
+      );
+      await otpModel.deleteMany({ email:email });
+      await otpModel.create({
+        email: email,
         otp: hashedOtp,
-        token: token,
+        token: newToken,
         otpType: "forgot-password",
         createdAt: new Date(),
+      });
+      const previewUrl = await sendResetOtpMail(email, OTP);
+      const responsePayload = {
+        message: "OTP sent to email",
+        token: token,
+      };
+    }
+
+    let decodedToken = JWT.verify(forgotPassToken, process.env.JWT_ACCESS);
+
+    if (!decodedToken)
+      return res.status(400).json({ 
+        success:false,
+        message: "Invalid token" 
+    });
+
+    if (
+      decodedToken.email !== isEmailPresent||
+      decodedToken.purpose !== "password-reset"
+    ) {
+      return res.status(400).json({ 
+        success:false,
+        message:'Invalid email or token type'
+     });
+    }
+
+
+    const otpDoc = await otpModel
+      .findOne({ email, token: forgotPassToken })
+      .sort({ expiresIn: -1 });
+    if (!otpDoc) {
+      return res
+        .status(400)
+        .json({ error: "OTP not found. Request a new OTP" });
+    }
+    const otpAge = Date.now() - new Date(otpDoc.expiresIn).getTime();
+    if (otpAge > OTP_EXPIRY_MS) {
+      await otpModel.deleteMany({ email });
+      return res
+        .status(400)
+        .json({ error: "OTP has expired. Request a new OTP" });
+    }
+    if (otpDoc.attempts >= OTP_MAX_ATTEMPTS) {
+      await otpModel.deleteMany({ email });
+      return res
+        .status(429)
+        .json({
+          error: "reached the highest attempts, try again after some times",
         });
-        const previewUrl = await sendResetOtpMail(email, otpCode);
-        const responsePayload = { message: "OTP sent to email", resetToken: token };
     }
 
-    let token = JWT.verify(forgotToken, process.env.JWT_SECRET);
-    
-    if(!token) return res.status(400).json({ error: "Invalid or expired reset token" });
-    
-    if (decodedToken.email !== email ||decodedToken.purpose !== "password-reset") {
-        return res.status(401).json({ error: "Invalid reset token payload" });
+    const isOtpValid = await bcrypt.compare(String(otp), otpDoc.otp);
+    if (!isOtpValid) {
+      return res.status(400).json({ error: "Invalid otp " });
+    }
+    const samePassword = await bcrypt.compare(
+      newPassword,
+      isEmailPresent.password,
+    );
+
+    if (samePassword) {
+      return res
+        .status(400)
+        .json({ error: "New password must be different from old password" });
     }
 
-    const otpDoc = await otpModel.findOne({ email, token: forgotToken }).sort({ expiresIn: -1 });
-        if(!otpDoc){
-            return res.status(400).json({error:'OTP not found. Request a new OTP'})
-        }
-        const otpAge=Date.now()- new Date(otpDoc.expiresIn).getTime();
-        if(otpAge>OTP_EXPIRY_MS){
-            await otpModel.deleteMany({email})
-            return res.status(400).json({error:'OTP has expired. Request a new OTP'})
-        }
-        if(otpDoc.attempts>=OTP_MAX_ATTEMPTS){
-            await otpModel.deleteMany({email})
-            return res.status(429).json({error:'reached the highest attempts, try again after some times'})
-        }
-
-        const isOtpValid=await bcrypt.compare(String(otp),otpDoc.otp);
-        if(!isOtpValid){
-            return res.status(400).json({error:'Invalid otp '})
-        }
-        const samePassword= await bcrypt.compare(newPassword,isEmailPresent.password)
-
-        if(samePassword){
-            return res.status(400).json({error:'New password must be different from old password'})
-        }
-
-        const hashedPassword=bcrypt.hash(newPassword,10);
-        if(!hashedPassword){
-            return res.status(500).json({error:'Internal server error'})
-        }
-        await userModel.updateOne({ email }, { $set: { password: hashedPassword } });
-        await otpModel.deleteMany({ email });
-        return res.status(200).json({message:'Password reset successful'})
-    }catch(error){
-        return res.status(500).json({error:'Server error'})
+    const hashedPassword = bcrypt.hash(newPassword, 10);
+    if (!hashedPassword) {
+      return res.status(500).json({ error: "Internal server error" });
     }
+    await userModel.updateOne(
+      { email },
+      { $set: { password: hashedPassword } },
+    );
+    await otpModel.deleteMany({ email });
+    return res.status(200).json({ 
+        success:true,
+        message: "Password reset successful" });
+  } catch (error) {
+    return res.status(500).json({
+        success:false,
+        message:'Internal server error',
+        error: error.message
+    });
+  }
 });
 
 export default router;

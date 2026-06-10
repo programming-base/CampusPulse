@@ -63,6 +63,11 @@ router.get('/notifications/settings',verifyAccessToken,async(req,res)=>{
             data:settings
         })
     }catch(error){
-        
+        res.status(500).json({
+            success:true,
+            message:'Internal server error',
+            error:error.message
+        })
     }
 })
+export default router; 

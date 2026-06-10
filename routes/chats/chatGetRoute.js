@@ -25,8 +25,8 @@ router.get('/chats/:chatId/messages',verifyAccessToken,chatVerification,async(re
         page=Number(page) || 1;
         limit=Math.min(Number(limit) || 50, 100);
         const skip=(page-1)*limit
-        const messages=await messageModel.find({chat:chatId}).skip(skip).limit(limit).populate('chat').populate('sender').sort({createdAt:1});
-        const totalMessages=await messageModel.countDocuments({chat:chatId});
+        const messages=await messageModel.find({chatId:chatId}).skip(skip).limit(limit).populate('chat').populate('sender').sort({createdAt:1});
+        const totalMessages=await messageModel.countDocuments({chatId:chatId});
         if(messages.length===0) {
             return res.status(200).json({ success:true,
                 data:messages,
@@ -57,3 +57,4 @@ router.get('/chats/:chatId',verifyAccessToken,chatVerification,async(req,res)=>{
         return res.status(500).json({error:'Internal server error'})
     }
 })
+export default router;

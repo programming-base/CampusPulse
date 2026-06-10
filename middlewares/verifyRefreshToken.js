@@ -1,5 +1,6 @@
 import JWT from 'jsonwebtoken'
 import mongoose from 'mongoose'
+import bcrypt from 'bcrypt'
 import tokenModel from "../database/schema/authSchema/tokenSchema.js";
 const verifyRefreshToken= async(req,res,next)=>{
     try{
@@ -15,7 +16,15 @@ const verifyRefreshToken= async(req,res,next)=>{
         }
         const checkToken = await tokenModel.findOne({userId:verify.userId,type:'refresh'});
         if(!checkToken){
-            return res.status(400).json({error:"Token not found"});
+            return res.status(404).json({error:"Token not found"});
+        }
+        const isMatch = await bcrypt.compare(token, checkToken.token);
+        if(!isMatch){
+            return res.status(401).json({ error: 'Invalid token' });
+        }
+        // check expiration
+        if (new Date(checkToken.expiresIn) < new Date()) {
+            return res.status(401).json({ error: 'Refresh token expired' });
         }
         req.user=verify;
         next();

@@ -54,12 +54,12 @@ router.put('/notifications/read-all',verifyAccessToken,async (req,res)=>{
     }catch(error){
         res.status(500).json({
             success:false,
-            message:error.mesag
+            message:error.message
         })
     }
 })
 
-route.put('/notifications/settings',verifyAccessToken,async(req,res)=>{
+router.put('/notifications/settings',verifyAccessToken,async(req,res)=>{
     try{
         const settings=req.body;
         if(Object.keys(settings).length===0){
@@ -80,3 +80,4 @@ route.put('/notifications/settings',verifyAccessToken,async(req,res)=>{
         })
     }
 })
+export default router;

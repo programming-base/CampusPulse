@@ -20,7 +20,7 @@ router.put(
           message: "Modification fields are empty",
         });
       }
-      const updatedchat = await chatModel.findByIdAndUpdate(
+      const updatedChat = await chatModel.findByIdAndUpdate(
         req.chat._id,
         { $set: modifications },
         { new: true, runValidators: true },
@@ -40,3 +40,4 @@ router.put(
     }
   },
 );
+export default router;

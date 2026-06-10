@@ -2,7 +2,7 @@ import 'dotenv/config';
 import app from './app.js';
 import DbConnect from './database/mongoDB.js';
 import http from 'http';
-import setupWebSocket from './webSockets/setupWebsocket.js';
+import setupWebSocket from './webSockets/setupWebSocket.js';
 const server=http.createServer(app);
 
 setupWebSocket(server);

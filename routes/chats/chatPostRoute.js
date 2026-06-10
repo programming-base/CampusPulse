@@ -19,16 +19,16 @@ router.post("/chats/group", verifyAccessToken, async (req, res) => {
     }
 
     let chatObject = {
-      type: "dm",
+      type: "group",
       description: description ? description : "",
-      participants: participantId,
+      participants: memberIds,
     };
 
     const createdChat = await chatModel.create(chatObject);
     res.status(200).json(createdChat);
   } catch (error) {
     res.status(500).json({
-      success: true,
+      success: false,
       message: "Intenal server error",
     });
   }
@@ -83,7 +83,7 @@ router.post(
         type: messageData.type,
       });
       const updateChat = await chatModel.findByIdAndUpdate(
-        chatId,
+        chat._id,
         {
           $set: {
             lastMessage: message.text,
@@ -131,8 +131,8 @@ router.post(
       let messageObject = {
         chatId: req.chat._id,
         sender: req.user.userId,
-        text: message.text,
-        type: message.type,
+        text: messageData.text,
+        type: messageData.type,
       };
       const message = await messageModel.create(messageObject);
 
@@ -332,3 +332,4 @@ router.post(
     }
   },
 );
+export default router;

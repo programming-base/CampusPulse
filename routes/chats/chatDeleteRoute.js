@@ -3,7 +3,7 @@ import mongoose, { modelNames, mongo } from "mongoose";
 import verifyAccessToken from "../../middlewares/verifyAccessToken.js";
 import chatVerification from "../../middlewares/chatsMiddleware/chatVerification.js";
 import chatModel from "../../database/schema/chatSchema/chatSchema.js";
-import messageModel from "../../database/schema/chatSchema/messageSchema,js";
+import messageModel from "../../database/schema/chatSchema/messageSchema.js";
 const router = express.Router();
 
 router.delete("/chats/:chatId/messages/:messageId",verifyAccessToken,chatVerification,
@@ -94,7 +94,7 @@ router.delete("/chats/:chatId/members/:userId",verifyAccessToken,chatVerificatio
       }
 
       if(!chat.admin.equals(req.user.userId)){
-        return res.status(200).json({
+        return res.status(403).json({
             success:false,
             message:'Only admins can remove the user'
         })
@@ -113,3 +113,4 @@ router.delete("/chats/:chatId/members/:userId",verifyAccessToken,chatVerificatio
         })
     }
   });
+export default router;

@@ -7,7 +7,7 @@ const router =express.Router();
 router.put('/posts/:postId',verifyAccessToken,postValidation,async(req,res)=>{
     try{
         const postId=req.post._id;
-        if(isPostPresent.userId.toString()!==req.user.userId){
+        if(req.post.userId.toString()!==req.user.userId){
             return res.status(403).json({error:'Unauthorized'});
         }
         const {content,imageUrl}=req.body;

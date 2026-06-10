@@ -15,7 +15,10 @@ router.post('/posts',verifyAccessToken,async(req,res)=>{
         const userData=req.user;
         const userInDB=await userModel.findById(userData.userId,{password:0})
         if(!userInDB){
-            return res.status(404).json({error:'user not found'})
+            return res.status(404).json({
+                success:false,
+                message:'User not found'
+            })
         }
         let post={
                 userId:userData.userId,
@@ -29,7 +32,7 @@ router.post('/posts',verifyAccessToken,async(req,res)=>{
             }
         post.isAnonymous=isAnonymous??false;
         if(!isAnonymous){
-            post.userName=userName;
+            post.userName=userInDB.userName;
         }
         const createdPost=await postModel.create(post);
         res.status(201).json(createdPost);

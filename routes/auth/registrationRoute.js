@@ -54,7 +54,7 @@ router.post("/auth/register", async (req, res) => {
     let token;
 
       savedUser = await userModel.create(user);
-      token = jwt.sign({ userId: savedUser._id, email, type: "refresh" },process.env.JWT_SECRET,{ expiresIn: "7d" });
+      token = jwt.sign({ userId: savedUser._id, email, type: "refresh" },process.env.JWT_REFRESH,{ expiresIn: "7d" });
 
       const hashedToken = await bcrypt.hash(token, 10);
       const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
