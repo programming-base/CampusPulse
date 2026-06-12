@@ -1,15 +1,9 @@
 import 'dotenv/config';
 import app from './app.js';
 import DbConnect from './database/mongoDB.js';
-import http from 'http';
-import setupWebSocket from './webSockets/setupWebSocket.js';
-const server=http.createServer(app);
-
-setupWebSocket(server);
-
 DbConnect.then(()=>{
     console.log('Database connected');
-    server.listen(3000,()=>{
+    app.listen(3000,()=>{
     console.log(`server is running on 3000`)
 })
 }).catch((error)=>{
