@@ -4,14 +4,14 @@ const notificationSchema = new mongoose.Schema(
 {
     recipient: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
+        ref: "Users",
         required: true,
         index: true
     },
 
     sender: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "User"
+        ref: "Users"
     },
 
     type: {
@@ -40,7 +40,7 @@ const notificationSchema = new mongoose.Schema(
 
     post: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Post",
+        ref: "Posts",
         default: null
     },
 
@@ -61,7 +61,7 @@ notificationSchema.index({
 
 const notificationModel =
 mongoose.model(
-    "Notification",
+    "Notifications",
     notificationSchema
 );
 

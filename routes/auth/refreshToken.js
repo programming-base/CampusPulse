@@ -12,7 +12,7 @@ router.post("/auth/refresh", verifyRefreshToken, async (req, res) => {
         type: "access",
       },
       process.env.JWT_ACCESS,
-      { expiresIn: "10m" },
+      { expiresIn: "5m" },
     );
     if (!newToken) {
       return res.status(500).json({
@@ -22,7 +22,7 @@ router.post("/auth/refresh", verifyRefreshToken, async (req, res) => {
     }
     res.status(200).json({
       success: true,
-      token: newToken,
+      accesToken: newToken,
     });
   } catch (error) {
     return res.status(500).json({

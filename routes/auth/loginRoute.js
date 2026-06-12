@@ -19,16 +19,16 @@ router.post('/auth/login',async (req,res)=>{
         if(!checkPassword){
             return res.status(401).json({error:'Invalid password'})
         }
-        const token=jwt.sign({
+        const refreshToken=jwt.sign({
             userId:user._id,
             email:email,
             type:'refresh'
         },process.env.JWT_REFRESH,{expiresIn:'7d'})
 
-        if(!token){
+        if(!refreshToken){
             return res.status(500).json({error:'Internal server error'})
         }
-        const hashedToken=await bcrypt.hash(token,10);
+        const hashedToken=await bcrypt.hash(refreshToken,10);
         const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
         const jsonToken={
             userId:user._id,
@@ -39,20 +39,35 @@ router.post('/auth/login',async (req,res)=>{
         }
         const storeToken=await tokenModel.create(jsonToken);
         if(!storeToken){
-            return res.status(500).json({error:'Internal server error'})
+            return res.status(404).json({
+                success:false,
+                message:'Token not found please login again'
+            })
         }
-        res.status(200).json({message:'logged in successfully',token})
-    }catch(err){
-        console.error('Login error:', err);
-    
-    if (err.name === 'JsonWebTokenError') {
-        return res.status(500).json({ error: 'Token generation failed' });
-    }
-    
-    if (err.name === 'MongoError' || err.name === 'MongoServerError') {
-        return res.status(500).json({ error: 'Database error' });
-    }
-    res.status(500).json({ error: 'Server error occurred' });
+        const accessToken=jwt.sign({
+            tokenId:storeToken._id,
+            userId:user._id,
+            email:email,
+            type:'access'
+        },process.env.JWT_ACCESS,{expiresIn:'5m'})
+        if(!accessToken){
+            return res.status(500).json({
+                success:false,
+                message:'Internal server error'
+            })
+        }
+        res.status(200).json({
+            success:true,
+            message:'logged in successfully',
+            refreshToken,
+            accessToken
+        })
+    }catch(error){
+        res.status(500).json({
+            success:false,
+            message:'Internal server error',
+            error:error.message
+        })
     }
 })
 

@@ -1,7 +1,7 @@
 import express from "express";
-import verifyAccessToken from "../../middlewares/verifyAccessToken";
-import cloudinary,{uploadBufferToCloudinary,upload} from "./cloudinary";
-import userModel from "../../database/schema/authSchema/userSchema";
+import verifyAccessToken from "../../middlewares/verifyAccessToken.js";
+import cloudinary,{uploadBufferToCloudinary,upload} from "./cloudinary.js";
+import userModel from "../../database/schema/authSchema/userSchema.js";
 const router =express.Router();
 
 router.post('/uploads/profile-photo',verifyAccessToken,upload.single('image'),async(req,res)=>{

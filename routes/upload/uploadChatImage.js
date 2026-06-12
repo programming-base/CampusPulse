@@ -1,6 +1,6 @@
 import express from "express";
-import cloudinary,{uploadBufferToCloudinary,upload} from "./cloudinary";
-import verifyAccessToken from "../../middlewares/verifyAccessToken";
+import cloudinary,{uploadBufferToCloudinary,upload} from "./cloudinary.js";
+import verifyAccessToken from "../../middlewares/verifyAccessToken.js";
 const router=express.Router();
 
 router.post('/uploads/chat-image',verifyAccessToken,upload.single('image'),async(req,res)=>{
@@ -22,3 +22,5 @@ router.post('/uploads/chat-image',verifyAccessToken,upload.single('image'),async
     }
     
 })
+
+export default router;

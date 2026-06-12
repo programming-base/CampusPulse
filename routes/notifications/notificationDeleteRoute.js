@@ -1,8 +1,8 @@
 import express from "express";
-import verifyAccessToken from "../../middlewares/verifyAccessToken";
+import verifyAccessToken from "../../middlewares/verifyAccessToken.js";
 import mongoose from "mongoose";
-import notificationModel from "../../database/schema/notificationSchema/notificationSchema";
-import messageSchema from "../../database/schema/chatSchema/messageSchema";
+import notificationModel from "../../database/schema/notificationSchema/notificationSchema.js";
+import messageSchema from "../../database/schema/chatSchema/messageSchema.js";
 const router=express.Router();
 
 router.delete('/notifications/:notificationId',verifyAccessToken,async (req,res)=>{

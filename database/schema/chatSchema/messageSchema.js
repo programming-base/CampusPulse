@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 const messageSchema = new mongoose.Schema(
   {
-    chatId: { type: mongoose.Schema.Types.ObjectId, ref: "Chat", required: true },
+    chatId: { type: mongoose.Schema.Types.ObjectId, ref: "Chats", required: true },
     sender: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Users",
@@ -14,7 +14,7 @@ const messageSchema = new mongoose.Schema(
       default: "text",
     },
     mediaUrl: { type: String },
-    readBy: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+    readBy: [{ type: mongoose.Schema.Types.ObjectId, ref: "Users" }],
   },
   { timestamps: true },
 );

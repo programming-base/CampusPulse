@@ -1,8 +1,8 @@
 import express from "express";
 import mongoose from "mongoose";
-import verifyAccessToken from "../../middlewares/verifyAccessToken";
-import notificationModel from "../../database/schema/notificationSchema/notificationSchema";
-import notificationSettingsModel from "../../database/schema/notificationSchema/notificationSettingsSchema";
+import verifyAccessToken from "../../middlewares/verifyAccessToken.js";
+import notificationModel from "../../database/schema/notificationSchema/notificationSchema.js";
+import notificationSettingsModel from "../../database/schema/notificationSchema/notificationSettingsSchema.js";
 const router=express.Router();
 
 router.put('/notifications/:notificationId/read',verifyAccessToken,async (req,res)=>{
