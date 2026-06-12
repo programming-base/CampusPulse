@@ -8,6 +8,7 @@ import tokenModel from "../../database/schema/authSchema/tokenSchema.js";
 const router = express.Router();
 
 router.post("/auth/register", async (req, res) => {
+  
   const {
     displayName,
     email,
@@ -28,7 +29,7 @@ router.post("/auth/register", async (req, res) => {
   ) {
     return res.status(400).json({ error: "Please provide proper information" });
   }
-
+  let savedUser;
   try {
     const emailExists = await userModel.findOne({ email });
     if (emailExists) {
@@ -36,9 +37,6 @@ router.post("/auth/register", async (req, res) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    if (!hashedPassword) {
-      return res.status(500).json({ error: "Password processing failed" });
-    }
     const user = {
       photoURL: "uewihfnfdsk",
       displayName,
@@ -49,12 +47,15 @@ router.post("/auth/register", async (req, res) => {
       department,
       academicYear,
     };
-    let savedUser;
+    
     let refreshToken;
-
     savedUser = await userModel.create(user);
+    const savedUserObject=savedUser.toObject();
+    delete savedUserObject.password;
+    const tokenId=new mongoose.Types.ObjectId();
+    
     refreshToken = jwt.sign(
-      { tokenId:storeToken._id,userId: savedUser._id, email, type: "refresh" },
+      {tokenId:tokenId,userId: savedUser._id, email, type: "refresh" },
       process.env.JWT_REFRESH,
       { expiresIn: "7d" },
     );
@@ -62,15 +63,15 @@ router.post("/auth/register", async (req, res) => {
     const hashedToken = await bcrypt.hash(refreshToken, 10);
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
     const jsonToken = {
+      _id:tokenId,
       userId: savedUser._id,
       token: hashedToken,
       type: "refresh",
-      createdAt: new Date(),
       expiresIn: expiresAt,
     };
-    let isTokenCreated = await tokenModel.create(jsonToken);
-    if (!isTokenCreated)
-      return res.status(500).json({ error: "couldnt create" });
+
+    await tokenModel.create(jsonToken);
+
     const accessToken = jwt.sign(
       {
         userId: savedUser._id,
@@ -80,22 +81,17 @@ router.post("/auth/register", async (req, res) => {
       process.env.JWT_ACCESS,
       { expiresIn: "5m" },
     );
-    if (!accessToken) {
-      return res.status(500).json({
-        success: false,
-        message: "Internal server error",
-      });
-    }
-
     res.status(201).json({
       message: "Account created",
       refreshToken,
       accessToken,
-      User: savedUser
+      User: savedUserObject
     });
-  } catch (err) {
-    console.error(err);
-    return res.status(500).json({ error: "Internal server error" });
+  } catch (error) {
+    if(savedUser?._id){
+      
+    }
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 

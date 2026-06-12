@@ -1,26 +1,29 @@
 import express from "express";
+import mongoose from "mongoose";
 import verifyAccessToken from "../../middlewares/verifyAccessToken.js";
 import tokenModel from "../../database/schema/authSchema/tokenSchema.js";
 import bcrypt from "bcrypt";
+import jwt from 'jsonwebtoken'
 const router = express.Router();
 
 router.post("/auth/logout", verifyAccessToken, async (req, res) => {
   try {
     const userId = req.user.userId;
-    const { tokenId, refreshToken } = req.body;
-    if (!tokenId || !refreshToken) {
+    const { refreshToken } = req.body;
+    if ( !refreshToken) {
       return res.status(400).json({
         success: false,
-        message: "Token information is missing",
+        message: "Token is required",
       });
     }
-    if (!mongoose.Types.ObjectId.isValid(tokenId)) {
-      return res.status(400).json({ 
-        success: false, 
-        message: "Invalid tokenId" });
+    const decodedRefreshToken=jwt.verify(refreshToken,process.env.JWT_REFRESH);
+    if(decodedRefreshToken.userId!==req.user.userId){
+        return res.status(401).json({
+            success: false,
+            message: "token mismatch",
+        });
     }
-
-    const istokenpresent = await tokenModel.findOne({_id:tokenId,userId:req.user.userId,isRevoked:false});
+    const istokenpresent = await tokenModel.findOne({_id:decodedRefreshToken.tokenId,userId:decodedRefreshToken.userId,isRevoked:false});
     if (!istokenpresent) {
       return res.status(400).json({
         success: false,
@@ -31,9 +34,15 @@ router.post("/auth/logout", verifyAccessToken, async (req, res) => {
       refreshToken,
       istokenpresent.token,
     );
+    if(!isTokenValid){
+        return res.status(400).json({
+            success:false,
+            message:'Invalid token'
+        })
+    }
 
     await tokenModel.findByIdAndUpdate(
-      tokenId,
+      decodedRefreshToken.tokenId,
       { $set: { isRevoked: true } },
       { new: true },
     );
@@ -42,6 +51,15 @@ router.post("/auth/logout", verifyAccessToken, async (req, res) => {
       message: "successfully logged out",
     });
   } catch (error) {
+    if(
+        error.name === "TokenExpiredError" ||
+        error.name === "JsonWebTokenError"
+    ){
+        return res.status(401).json({
+            success:false,
+            message:"Invalid refresh token"
+        });
+    }
     return res.status(500).json({
       success: false,
       message: "Internal server error",

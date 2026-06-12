@@ -14,7 +14,7 @@ const verifyRefreshToken= async(req,res,next)=>{
         if(!mongoose.Types.ObjectId.isValid(verify.userId)){
             return res.status(400).json({error:"Token invalid id"});
         }
-        const checkToken = await tokenModel.findOne({userId:verify.userId,type:'refresh'});
+        const checkToken = await tokenModel.findOne({_id:verify.tokenId,userId:verify.userId,type:'refresh',isRevoked:false});
         if(!checkToken){
             return res.status(404).json({error:"Token not found"});
         }
