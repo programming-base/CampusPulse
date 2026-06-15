@@ -75,7 +75,7 @@ router.post('/auth/reset-password',async (req,res)=>{
 
             const token = JWT.sign(
               { email, purpose: 'password-reset' },
-              process.env.JWT_ACEESS,
+              process.env.JWT_ACCESS,
               { expiresIn: '10m' }
             );
 

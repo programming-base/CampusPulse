@@ -54,10 +54,8 @@ const sendResetOtpMail = async (email, otp) => {
 router.post("/auth/forgot-password", async (req, res) => {
   try {
     const { email, otp, forgotPassToken, newPassword } = req.body;
-    const isEmailPresent = (await userModel.findOne({ email: email }))
-      ? true
-      : false;
-    if (!isEmailPresent) {
+    const user = (await userModel.findOne({ email: email },{password:0}));
+    if (!user) {
       return res.status(400).json({
         success: false,
         message: "Email does not exist",
@@ -78,7 +76,7 @@ router.post("/auth/forgot-password", async (req, res) => {
           email,
           purpose: "forgot-passwaord-reset",
         },
-        process.env.JWT_SECRET,
+        process.env.JWT_ACCESS,
         { expiresIn: "5m" },
       );
       await otpModel.deleteMany({ email:email });
@@ -92,8 +90,13 @@ router.post("/auth/forgot-password", async (req, res) => {
       const previewUrl = await sendResetOtpMail(email, OTP);
       const responsePayload = {
         message: "OTP sent to email",
-        token: token,
+        token: newToken,
       };
+      if(previewUrl){
+        responsePayload.previewUrl = previewUrl
+      }
+      return res.status(200).json(responsePayload);
+      
     }
 
     let decodedToken = JWT.verify(forgotPassToken, process.env.JWT_ACCESS);
@@ -105,8 +108,8 @@ router.post("/auth/forgot-password", async (req, res) => {
     });
 
     if (
-      decodedToken.email !== isEmailPresent||
-      decodedToken.purpose !== "password-reset"
+      decodedToken.email !== user.email||
+      decodedToken.purpose !== "forgot-password-reset"
     ) {
       return res.status(400).json({ 
         success:false,
@@ -145,7 +148,7 @@ router.post("/auth/forgot-password", async (req, res) => {
     }
     const samePassword = await bcrypt.compare(
       newPassword,
-      isEmailPresent.password,
+      user.password,
     );
 
     if (samePassword) {
@@ -163,9 +166,10 @@ router.post("/auth/forgot-password", async (req, res) => {
       { $set: { password: hashedPassword } },
     );
     await otpModel.deleteMany({ email });
-    return res.status(200).json({ 
-        success:true,
-        message: "Password reset successful" });
+    res.status(200).json({ 
+      success:true,
+      message: "Password reset successful" 
+    });
   } catch (error) {
     return res.status(500).json({
         success:false,

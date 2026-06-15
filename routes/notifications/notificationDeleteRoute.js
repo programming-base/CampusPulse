@@ -2,8 +2,29 @@ import express from "express";
 import verifyAccessToken from "../../middlewares/verifyAccessToken.js";
 import mongoose from "mongoose";
 import notificationModel from "../../database/schema/notificationSchema/notificationSchema.js";
-import messageSchema from "../../database/schema/chatSchema/messageSchema.js";
 const router=express.Router();
+
+
+router.delete('/notifications/clear-read',verifyAccessToken,async(req,res)=>{
+    try{
+        const deleteAllNotification=await notificationModel.deleteMany({recipient:req.user.userId,isRead:true})
+        if(!deleteAllNotification.acknowledged){
+            return res.status(500).json({
+                success:false,
+                message:'Internal server error'
+            })
+        }
+        res.status(200).json({
+            success:true,
+            message:'Read notifications cleared'
+        })
+    }catch(error){
+        res.status(500).json({
+            success:false,
+            message:"Internal server error"
+        })
+    }
+})
 
 router.delete('/notifications/:notificationId',verifyAccessToken,async (req,res)=>{
     try{
@@ -25,27 +46,6 @@ router.delete('/notifications/:notificationId',verifyAccessToken,async (req,res)
         res.status(500).json({
             success:false,
             message:'Internal server error'
-        })
-    }
-})
-
-router.delete('/notifications/clear-read',verifyAccessToken,async(req,res)=>{
-    try{
-        const deleteAllNotification=await notificationModel.deleteMany({recipient:req.user.userId,isRead:true})
-        if(!deleteAllNotification.acknowledged){
-            return res.status(500).json({
-                success:false,
-                message:'Internal server error'
-            })
-        }
-        res.status(200).json({
-            success:true,
-            message:'Read notifications cleared'
-        })
-    }catch(error){
-        res.status(500).json({
-            success:false,
-            message:"Internal server error"
         })
     }
 })

@@ -5,8 +5,6 @@ import userModel from "../../database/schema/authSchema/userSchema.js";
 import followerModel from "../../database/schema/followSchema/followerShema.js";
 import followingModel from "../../database/schema/followSchema/followingSchema.js";
 const router = express.Router();
-
-
 router.get('/users/search',verifyAccessToken,async(req,res)=>{
     try{
         let {query,department,academicYear,college,page ,limit}=req.query;
@@ -117,7 +115,8 @@ router.get('/users/:userId/is-following',verifyAccessToken,userValidation,async(
 })
 router.get('/users/:userId',verifyAccessToken,userValidation,async(req,res)=>{
     try{
-        let presentUserData=req.presentUser;
+        let presentUserData=req.presentUser.Object();
+        
         const responseJson={
             success:true,
             data:presentUserData
@@ -126,7 +125,6 @@ router.get('/users/:userId',verifyAccessToken,userValidation,async(req,res)=>{
             delete responseJson.data.email;
             return res.status(200).json(responseJson)
         }
-        
         return res.status(200).json(responseJson);
     }catch(error){
         res.status(500).json({error:'Internal server error '})

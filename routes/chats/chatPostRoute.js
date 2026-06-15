@@ -86,7 +86,7 @@ router.post(
         chat._id,
         {
           $set: {
-            lastMessage: message.text,
+            lastMessage: message._id,
           },
         },
         { new: true },
