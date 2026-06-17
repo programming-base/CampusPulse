@@ -14,17 +14,15 @@ describe('DM Chat API', () => {
   });
 
   describe('POST /api/chats/dm/messages/:userId', () => {
-    it('should attempt to send a DM (known bug: lastMessage type mismatch causes 500)', async () => {
-      // Known source code bug: The DM route sets lastMessage to message.text (a string),
-      // but the chat schema defines lastMessage as ObjectId ref. This causes a Mongoose
-      // validation error resulting in a 500.
+    it('should send a DM successfully (creates DM room)', async () => {
       const res = await request(app)
         .post(`/api/chats/dm/messages/${user2Auth.user._id}`)
         .set('Authorization', `Bearer ${user1Auth.accessToken}`)
         .send({ text: 'Hello there!', type: 'text' });
 
-      // Bug: lastMessage: message.text is a String but schema expects ObjectId → 500
-      expect(res.statusCode).toBe(500);
+      expect(res.statusCode).toBe(201);
+      expect(res.body).toHaveProperty('success', true);
+      expect(res.body.data).toHaveProperty('text', 'Hello there!');
     });
 
     it('should return 400 if message text is missing', async () => {

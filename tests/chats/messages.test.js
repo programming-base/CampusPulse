@@ -59,9 +59,8 @@ describe('Chat Messages API', () => {
   });
 
   describe('GET /api/chats/:chatId/messages', () => {
-    it('should return 500 due to invalid populate path (known bug: populate("chat") but field is "chatId")', async () => {
-      // Known bug: The route uses .populate('chat') but the messageSchema field is 'chatId'.
-      // Mongoose throws an error because 'chat' is not a populated path.
+    it('should return messages with populated fields', async () => {
+      // Route correctly uses .populate('chatId').populate('sender')
       await messageModel.create([
         { chatId, sender: user1Auth.user._id, text: 'Message 1', type: 'text' },
       ]);
@@ -70,8 +69,9 @@ describe('Chat Messages API', () => {
         .get(`/api/chats/${chatId}/messages`)
         .set('Authorization', `Bearer ${user1Auth.accessToken}`);
 
-      // Bug: .populate('chat') fails because the field is 'chatId' not 'chat'
-      expect(res.statusCode).toBe(500);
+      expect(res.statusCode).toBe(200);
+      expect(res.body).toHaveProperty('success', true);
+      expect(res.body.data).toHaveLength(1);
     });
 
     it('should return 200 with empty data when no messages exist', async () => {
@@ -79,9 +79,8 @@ describe('Chat Messages API', () => {
         .get(`/api/chats/${chatId}/messages`)
         .set('Authorization', `Bearer ${user1Auth.accessToken}`);
 
-      // Empty messages case may still work since populate on empty results is harmless
-      // OR it may fail due to the same populate bug
-      expect([200, 500]).toContain(res.statusCode);
+      expect(res.statusCode).toBe(200);
+      expect(res.body.data).toHaveLength(0);
     });
   });
 

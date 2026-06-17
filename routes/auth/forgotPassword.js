@@ -54,7 +54,7 @@ const sendResetOtpMail = async (email, otp) => {
 router.post("/auth/forgot-password", async (req, res) => {
   try {
     const { email, otp, forgotPassToken, newPassword } = req.body;
-    const user = (await userModel.findOne({ email: email },{password:0}));
+    const user = (await userModel.findOne({ email: email }));
     if (!user) {
       return res.status(400).json({
         success: false,
@@ -65,16 +65,10 @@ router.post("/auth/forgot-password", async (req, res) => {
     if (!isReqBodyPresent) {
       const OTP = crypto.randomInt(100000, 1000000).toString();
       const hashedOtp = await bcrypt.hash(OTP, 10);
-      if (!hashedOtp)
-        return res.status().json({
-            success:false,
-            message: "Internal server error"
-        });
-
       const newToken = JWT.sign(
         {
           email,
-          purpose: "forgot-passwaord-reset",
+          purpose: "forgot-password-reset",
         },
         process.env.JWT_ACCESS,
         { expiresIn: "5m" },
@@ -101,11 +95,6 @@ router.post("/auth/forgot-password", async (req, res) => {
 
     let decodedToken = JWT.verify(forgotPassToken, process.env.JWT_ACCESS);
 
-    if (!decodedToken)
-      return res.status(400).json({ 
-        success:false,
-        message: "Invalid token" 
-    });
 
     if (
       decodedToken.email !== user.email||
@@ -116,17 +105,15 @@ router.post("/auth/forgot-password", async (req, res) => {
         message:'Invalid email or token type'
      });
     }
-
-
     const otpDoc = await otpModel
       .findOne({ email, token: forgotPassToken })
-      .sort({ expiresIn: -1 });
+      .sort({ createdAt: -1 });
     if (!otpDoc) {
       return res
         .status(400)
         .json({ error: "OTP not found. Request a new OTP" });
     }
-    const otpAge = Date.now() - new Date(otpDoc.expiresIn).getTime();
+    const otpAge = Date.now() - new Date(otpDoc.createdAt).getTime();
     if (otpAge > OTP_EXPIRY_MS) {
       await otpModel.deleteMany({ email });
       return res
@@ -144,6 +131,7 @@ router.post("/auth/forgot-password", async (req, res) => {
 
     const isOtpValid = await bcrypt.compare(String(otp), otpDoc.otp);
     if (!isOtpValid) {
+      await otpModel.updateOne({ _id: otpDoc._id }, { $inc: { attempts: 1 } }); 
       return res.status(400).json({ error: "Invalid otp " });
     }
     const samePassword = await bcrypt.compare(
@@ -157,10 +145,8 @@ router.post("/auth/forgot-password", async (req, res) => {
         .json({ error: "New password must be different from old password" });
     }
 
-    const hashedPassword = bcrypt.hash(newPassword, 10);
-    if (!hashedPassword) {
-      return res.status(500).json({ error: "Internal server error" });
-    }
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    
     await userModel.updateOne(
       { email },
       { $set: { password: hashedPassword } },

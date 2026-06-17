@@ -80,7 +80,7 @@ router.post('/auth/reset-password',async (req,res)=>{
             );
 
             await otpModel.deleteMany({ email });
-            await otpModel.create({ otp: hashedOtp, email, token, expiresIn: new Date() });
+            await otpModel.create({ otp: hashedOtp, email, token, createdAt: new Date() });
 
             const previewUrl = await sendResetOtpMail(email, otpCode);
             const responsePayload = { message: 'OTP sent to email', resetToken: token };
@@ -103,12 +103,12 @@ router.post('/auth/reset-password',async (req,res)=>{
           return res.status(401).json({ error: 'Invalid reset token payload' });
         }
 
-        const otpDoc = await otpModel.findOne({ email, token: resetToken }).sort({ expiresIn: -1 });
+        const otpDoc = await otpModel.findOne({ email, token: resetToken }).sort({ createdAt: -1 });
         if(!otpDoc){
           return res.status(400).json({error:'OTP not found. Request a new OTP'})
         }
 
-        const otpAge = Date.now() - new Date(otpDoc.expiresIn).getTime();
+        const otpAge = Date.now() - new Date(otpDoc.createdAt).getTime();
         if(otpAge > OTP_EXPIRY_MS){
           await otpModel.deleteMany({ email });
           return res.status(400).json({error:'OTP has expired. Request a new OTP'})

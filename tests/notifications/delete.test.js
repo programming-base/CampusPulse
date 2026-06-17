@@ -51,20 +51,33 @@ describe('Notifications Delete API', () => {
   });
 
   describe('DELETE /api/notifications/clear-read', () => {
-    // Known route ordering issue: The /:notificationId route is registered before /clear-read,
-    // so DELETE /notifications/clear-read is intercepted by /:notificationId with
-    // notificationId = "clear-read", which fails Mongoose ObjectId validation → 400.
-    // This is a known bug in the route definition order.
-
-    it('should return 400 due to route ordering bug (clear-read matched as :notificationId)', async () => {
-      await createNotification(user1Auth.user._id, user2Auth.user._id, { isRead: true });
+    it('should successfully clear read notifications for the current user', async () => {
+      // Create a read notification for user 1
+      const readNotifUser1 = await createNotification(user1Auth.user._id, user2Auth.user._id, { isRead: true });
+      // Create an unread notification for user 1
+      const unreadNotifUser1 = await createNotification(user1Auth.user._id, user2Auth.user._id, { isRead: false });
+      // Create a read notification for user 2
+      const readNotifUser2 = await createNotification(user2Auth.user._id, user1Auth.user._id, { isRead: true });
 
       const res = await request(app)
         .delete('/api/notifications/clear-read')
         .set('Authorization', `Bearer ${user1Auth.accessToken}`);
 
-      // Bug: "clear-read" is matched as :notificationId, fails ObjectId validation → 400
-      expect(res.statusCode).toBe(400);
+      expect(res.statusCode).toBe(200);
+      expect(res.body).toHaveProperty('success', true);
+      expect(res.body).toHaveProperty('message', 'Read notifications cleared');
+
+      // Verify that user 1's read notification was deleted
+      const deletedReadNotif = await notificationModel.findById(readNotifUser1._id);
+      expect(deletedReadNotif).toBeNull();
+
+      // Verify that user 1's unread notification was NOT deleted
+      const keptUnreadNotif = await notificationModel.findById(unreadNotifUser1._id);
+      expect(keptUnreadNotif).not.toBeNull();
+
+      // Verify that user 2's read notification was NOT deleted
+      const keptOtherUserNotif = await notificationModel.findById(readNotifUser2._id);
+      expect(keptOtherUserNotif).not.toBeNull();
     });
   });
 });

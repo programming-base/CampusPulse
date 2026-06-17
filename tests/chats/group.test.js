@@ -80,15 +80,15 @@ describe('Group Chat API', () => {
       chatId = chat._id;
     });
 
-    it('should return 500 when a non-admin tries to leave (known bug: admin.some() on non-array)', async () => {
-      // Known source code bug: admin is a single ObjectId, but the code uses:
-      //   const isAdmin = req.chat.admin.some(admin => admin.toString() === req.user.userId);
-      // This crashes because ObjectId has no .some() method.
+    it('should allow a non-admin member to leave the group', async () => {
+      // admin IS an array in chatSchema, so .some() works correctly.
       const res = await request(app)
         .post(`/api/chats/${chatId}/leave`)
         .set('Authorization', `Bearer ${user2Auth.accessToken}`);
 
-      expect(res.statusCode).toBe(500);
+      expect(res.statusCode).toBe(200);
+      expect(res.body).toHaveProperty('success', true);
+      expect(res.body).toHaveProperty('message', 'You left the group');
     });
 
     it('should return 404 if non-participant tries to leave', async () => {

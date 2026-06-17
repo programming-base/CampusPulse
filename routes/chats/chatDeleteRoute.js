@@ -93,7 +93,7 @@ router.delete("/chats/:chatId/members/:userId",verifyAccessToken,chatVerificatio
         })
       }
 
-      if(!chat.admin.equals(req.user.userId)){
+      if(!chat.admin.some(a=>a.toString()===req.user.userId)){
         return res.status(403).json({
             success:false,
             message:'Only admins can remove the user'

@@ -15,6 +15,14 @@ beforeAll(async () => {
   process.env.CLOUDINARY_API_KEY = 'test-api-key';
   process.env.CLOUDINARY_API_SECRET = 'test-api-secret';
 
+  // SMTP env vars to prevent nodemailer from calling createTestAccount (HTTP request)
+  process.env.SMTP_HOST = 'smtp.ethereal.email';
+  process.env.SMTP_PORT = '587';
+  process.env.SMTP_SECURE = 'false';
+  process.env.SMTP_USER = 'test@ethereal.email';
+  process.env.SMTP_PASS = 'testpassword';
+  process.env.SMTP_FROM = '"CampusPulse Test" <test@campuspulse.local>';
+
   // Start in-memory MongoDB
   mongoServer = await MongoMemoryServer.create();
   const uri = mongoServer.getUri();

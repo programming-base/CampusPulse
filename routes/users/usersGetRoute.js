@@ -115,7 +115,7 @@ router.get('/users/:userId/is-following',verifyAccessToken,userValidation,async(
 })
 router.get('/users/:userId',verifyAccessToken,userValidation,async(req,res)=>{
     try{
-        let presentUserData=req.presentUser.Object();
+        let presentUserData=req.presentUser.toObject();
         
         const responseJson={
             success:true,
