@@ -23,11 +23,17 @@ router.get('/posts',verifyAccessToken,async(req,res)=>{
     if(academicYear){
         filter.academicYear=Number(academicYear)
     }
-    const posts=await postModel.find(filter).skip(Skip).limit(limit);
-
+    let posts=await postModel.find(filter).skip(Skip).limit(limit);
+    let postsData=posts.map(post=>post.toObject())
+    postsData.forEach((post)=>{
+        if(post.isAnonymous){
+            delete post.userId;
+            delete post.userName;
+        }
+    })
     const totalCount=await postModel.countDocuments(filter);
     const responseJson={
-        items:posts,
+        items:postsData,
         page:page,
         limit:limit,
         total:totalCount,
@@ -40,7 +46,11 @@ router.get('/posts',verifyAccessToken,async(req,res)=>{
 router.get('/posts/:postId',verifyAccessToken,postValidation,async(req,res)=>{
 
     try{
-        const postData=req.post;
+        const postData=req.post.toObject();
+        if(postData.isAnonymous){
+            delete postData.userId;
+            delete postData.userName;
+        }
         res.status(200).json({postData});
     }catch(error){
         res.status(500).json({error:'Internal server error'})
