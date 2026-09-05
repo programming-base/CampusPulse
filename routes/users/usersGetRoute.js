@@ -2,7 +2,7 @@ import express from "express";
 import verifyAccessToken from "../../middlewares/verifyAccessToken.js";
 import userValidation from "../../middlewares/userValidation.js";
 import userModel from "../../database/schema/authSchema/userSchema.js";
-import followerModel from "../../database/schema/followSchema/followerShema.js";
+import followerModel from "../../database/schema/followSchema/followerSchema.js";
 import followingModel from "../../database/schema/followSchema/followingSchema.js";
 const router = express.Router();
 router.get('/users/search',verifyAccessToken,async(req,res)=>{
@@ -74,7 +74,7 @@ router.get('/users/:userId/followers',verifyAccessToken,userValidation,async(req
         res.status(500).json({error:'Internal server error '})
     }
 })
-router.get('/user/:userId/following',verifyAccessToken,userValidation,async(req,res)=>{
+router.get('/users/:userId/following',verifyAccessToken,userValidation,async(req,res)=>{
     try{
         const targetUserId=req.presentUser._id;
         let {page,limit}=req.query;

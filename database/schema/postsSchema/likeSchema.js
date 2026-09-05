@@ -7,7 +7,7 @@ const likeSchema = new mongoose.Schema({
     },
     userId:{
         type:mongoose.Schema.Types.ObjectId,
-        ref:'Users',
+        ref:'User',
         required:true
     },
     targetType:{
@@ -17,5 +17,5 @@ const likeSchema = new mongoose.Schema({
     }
 },{timestamps:true})
 
-const likeModel=mongoose.model('Likes',likeSchema);
+const likeModel=mongoose.model('Like',likeSchema);
 export default likeModel;

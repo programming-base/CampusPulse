@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 const chatSchema = new mongoose.Schema({
     admin:[{
         type:mongoose.Schema.Types.ObjectId,
-        ref:'Users'
+        ref:'User'
     }],
     type: {
         type: String,
@@ -14,7 +14,7 @@ const chatSchema = new mongoose.Schema({
     },
     participants: [{
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Users"
+        ref: "User"
     }],
 
     lastMessage: {
@@ -33,5 +33,5 @@ const chatSchema = new mongoose.Schema({
 
 }, { timestamps: true });
 
-const chatModel=mongoose.model('Chats',chatSchema)
+const chatModel=mongoose.model('Chat',chatSchema)
 export default chatModel;

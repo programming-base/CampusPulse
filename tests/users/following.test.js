@@ -5,7 +5,7 @@ import { testUser, testUser2 } from '../fixtures/users.fixture.js';
 import { createTestUser } from '../helpers/auth.helpers.js';
 
 // Note: The following endpoint uses /user/ (singular) not /users/
-describe('GET /api/user/:userId/following', () => {
+describe('GET /api/users/:userId/following', () => {
   let user1Auth, user2Auth;
 
   beforeEach(async () => {
@@ -21,7 +21,7 @@ describe('GET /api/user/:userId/following', () => {
 
   it('should return following list for a user', async () => {
     const res = await request(app)
-      .get(`/api/user/${user1Auth.user._id}/following`)
+      .get(`/api/users/${user1Auth.user._id}/following`)
       .set('Authorization', `Bearer ${user1Auth.accessToken}`);
 
     expect(res.statusCode).toBe(200);
@@ -32,7 +32,7 @@ describe('GET /api/user/:userId/following', () => {
 
   it('should return empty data when user is not following anyone', async () => {
     const res = await request(app)
-      .get(`/api/user/${user2Auth.user._id}/following`)
+      .get(`/api/users/${user2Auth.user._id}/following`)
       .set('Authorization', `Bearer ${user1Auth.accessToken}`);
 
     expect(res.statusCode).toBe(200);
@@ -42,7 +42,7 @@ describe('GET /api/user/:userId/following', () => {
 
   it('should support pagination for following', async () => {
     const res = await request(app)
-      .get(`/api/user/${user1Auth.user._id}/following`)
+      .get(`/api/users/${user1Auth.user._id}/following`)
       .query({ page: 1, limit: 10 })
       .set('Authorization', `Bearer ${user1Auth.accessToken}`);
 
@@ -54,7 +54,7 @@ describe('GET /api/user/:userId/following', () => {
 
   it('should return 401 if unauthorized', async () => {
     const res = await request(app)
-      .get(`/api/user/${user1Auth.user._id}/following`);
+      .get(`/api/users/${user1Auth.user._id}/following`);
 
     expect(res.statusCode).toBe(401);
   });

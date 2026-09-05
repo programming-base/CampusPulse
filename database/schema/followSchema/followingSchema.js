@@ -5,15 +5,15 @@ import mongoose, { Mongoose } from "mongoose";
 const followingSchema=new mongoose.Schema({
     userId:{
         type:mongoose.Schema.Types.ObjectId,
-        ref:'Users',
+        ref:'User',
         required:true,
     },
     followingId:{
         type:mongoose.Schema.Types.ObjectId,
-        ref:'Users',
+        ref:'User',
         required:true
     },
 },{timestamps:true})
 
-const followingModel=mongoose.model("Followings",followingSchema);
+const followingModel=mongoose.model("Following",followingSchema);
 export default followingModel;

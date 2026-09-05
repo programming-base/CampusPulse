@@ -1,6 +1,6 @@
 import request from 'supertest';
 import app from '../../app.js';
-import followerModel from '../../database/schema/followSchema/followerShema.js';
+import followerModel from '../../database/schema/followSchema/followerSchema.js';
 import { testUser, testUser2 } from '../fixtures/users.fixture.js';
 import { createTestUser } from '../helpers/auth.helpers.js';
 

@@ -2,7 +2,7 @@ import mongoose, { mongo } from "mongoose";
 const notificationSettingsSchema=new mongoose.Schema({
     userId:{
         type:mongoose.Schema.Types.ObjectId,
-        ref:'Users',
+        ref:'User',
         required:true
     },
     likes: {
@@ -35,5 +35,5 @@ const notificationSettingsSchema=new mongoose.Schema({
         default: false
     }
 })
-const notificationSettingsModel=mongoose.model('Notification_Settings',notificationSettingsSchema);
+const notificationSettingsModel=mongoose.model('NotificationSetting',notificationSettingsSchema);
 export default notificationSettingsModel;

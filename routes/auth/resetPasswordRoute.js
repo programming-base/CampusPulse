@@ -4,7 +4,7 @@ import crypto from 'crypto';
 import bcrypt from 'bcrypt';
 import JWT from 'jsonwebtoken'
 import userModel from '../../database/schema/authSchema/userSchema.js';
-import otpModel from '../../database/schema/authSchema/otp.js';
+import otpModel from '../../database/schema/authSchema/otpSchema.js';
 
 const router =express.Router();
 

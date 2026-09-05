@@ -30,5 +30,5 @@ const otpCollection=new mongoose.Schema({
     }
 })
 
-const otpModel=mongoose.model('otps',otpCollection);
+const otpModel=mongoose.model('Otp',otpCollection);
 export default otpModel;

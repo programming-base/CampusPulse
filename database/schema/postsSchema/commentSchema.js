@@ -4,11 +4,11 @@ const commentSchema=new mongoose.Schema({
     postId:{
         type:mongoose.Schema.Types.ObjectId,
         required:true,
-        ref:'Posts'
+        ref:'Post'
     },
     userId:{
         type:mongoose.Schema.Types.ObjectId,
-        ref:'Users',
+        ref:'User',
         required:true,
     },
     
@@ -24,5 +24,5 @@ const commentSchema=new mongoose.Schema({
 },{timestamps:true});
 
 
-const commentModel=mongoose.model('Comments',commentSchema);
+const commentModel=mongoose.model('Comment',commentSchema);
 export default commentModel;
