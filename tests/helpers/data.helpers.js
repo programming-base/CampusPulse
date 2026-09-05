@@ -1,7 +1,7 @@
 import request from 'supertest';
 import app from '../../app.js';
-import notificationModel from '../../database/schema/notificationSchema/notificationSchema.js';
-import notificationSettingsModel from '../../database/schema/notificationSchema/notificationSettingsSchema.js';
+import notificationModel from '../../models/notificationSchema/notificationSchema.js';
+import notificationSettingsModel from '../../models/notificationSchema/notificationSettingsSchema.js';
 
 /**
  * Creates a post via the API.

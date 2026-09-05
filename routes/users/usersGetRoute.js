@@ -1,9 +1,8 @@
 import express from "express";
 import verifyAccessToken from "../../middlewares/verifyAccessToken.js";
 import userValidation from "../../middlewares/userValidation.js";
-import userModel from "../../database/schema/authSchema/userSchema.js";
-import followerModel from "../../database/schema/followSchema/followerSchema.js";
-import followingModel from "../../database/schema/followSchema/followingSchema.js";
+import userModel from "../../models/authSchema/userSchema.js";
+import followModel from "../../models/followSchema/followSchema.js";
 const router = express.Router();
 router.get('/users/search',verifyAccessToken,async(req,res)=>{
     try{
@@ -52,14 +51,13 @@ router.get('/users/search',verifyAccessToken,async(req,res)=>{
 })
 router.get('/users/:userId/followers',verifyAccessToken,userValidation,async(req,res)=>{
     try{
-        const client=req.user;
         const targetUserId=req.presentUser._id;
         let {page,limit}=req.query;
         page=Math.max(1,Number(page)||1);
         limit=Math.max(1,Number(limit)||20)
         let skip=(page-1)*limit
-        const followers=await followerModel.find({userId:targetUserId}).skip(skip).limit(limit)
-        const totalFollowers=await followerModel.countDocuments({userId:targetUserId});
+        const followers=await followModel.find({followingId:targetUserId}).skip(skip).limit(limit)
+        const totalFollowers=await followModel.countDocuments({followingId:targetUserId});
         const totalPages=Math.ceil(totalFollowers/limit);
         let responseJson={
             success:true,
@@ -81,9 +79,9 @@ router.get('/users/:userId/following',verifyAccessToken,userValidation,async(req
         page=Math.max(1,Number(page)||1);
         limit=Math.max(1,Number(limit)||20)
         let skip=(page-1)*limit
-        const followings=await followingModel.find({userId:targetUserId}).skip(skip).limit(limit)
+        const followings=await followModel.find({followerId:targetUserId}).skip(skip).limit(limit)
 
-        const totalFollowings=await followingModel.countDocuments({userId:targetUserId});
+        const totalFollowings=await followModel.countDocuments({followerId:targetUserId});
         const totalPages=Math.ceil(totalFollowings/limit);
         let responseJson={
             success:true,
@@ -106,7 +104,7 @@ router.get('/users/:userId/is-following',verifyAccessToken,userValidation,async(
         const targetUser=req.presentUser._id.toString();
         const client =req.user.userId;
         if(targetUser===client) return res.status(200).json({success:true,isFollowing:false})
-        const isFollowing=await followingModel.findOne({userId:client,followingId:targetUser});
+        const isFollowing=await followModel.findOne({followerId:client,followingId:targetUser});
         if(!isFollowing)return res.status(200).json({success:true,isFollowing:false})
         res.status(200).json({success:true,data:{isFollowing:true}})
     }catch(error){

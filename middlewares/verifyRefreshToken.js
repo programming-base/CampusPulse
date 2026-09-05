@@ -1,13 +1,15 @@
 import JWT from 'jsonwebtoken'
 import mongoose from 'mongoose'
 import bcrypt from 'bcrypt'
-import tokenModel from "../database/schema/authSchema/tokenSchema.js";
+import tokenModel from "../models/authSchema/tokenSchema.js";
+import env from "../config/env.js";
+
 const verifyRefreshToken= async(req,res,next)=>{
     try{
         const authHeader=req.headers.authorization;
         if(!authHeader || !authHeader.startsWith('Bearer ')) return res.status(400).json({error:'Token not found'})
         const token=authHeader.split(' ')[1];
-        let verify=JWT.verify(token,process.env.JWT_REFRESH);
+        let verify=JWT.verify(token,env.JWT.REFRESH);
         if(!verify || verify.type !=='refresh'){
             return res.status(400).json({error:'Invalid token'})
         }

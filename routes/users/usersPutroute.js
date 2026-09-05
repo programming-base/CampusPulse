@@ -1,7 +1,7 @@
 import express from "express";
 import verifyAccessToken from "../../middlewares/verifyAccessToken.js";
 import mongoose from "mongoose";
-import userModel from "../../database/schema/authSchema/userSchema.js";
+import userModel from "../../models/authSchema/userSchema.js";
 
 const router = express.Router();
 

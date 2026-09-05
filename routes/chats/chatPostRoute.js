@@ -1,10 +1,10 @@
 import express, { text } from "express";
 import verifyAccessToken from "../../middlewares/verifyAccessToken.js";
 import mongoose from "mongoose";
-import chatModel from "../../database/schema/chatSchema/chatSchema.js";
+import chatModel from "../../models/chatSchema/chatSchema.js";
 import chatVerification from "../../middlewares/chatsMiddleware/chatVerification.js";
-import messageModel from "../../database/schema/chatSchema/messageSchema.js";
-import userModel from "../../database/schema/authSchema/userSchema.js";
+import messageModel from "../../models/chatSchema/messageSchema.js";
+import userModel from "../../models/authSchema/userSchema.js";
 chatVerification;
 const router = express.Router();
 

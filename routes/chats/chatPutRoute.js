@@ -1,7 +1,7 @@
 import express from "express";
 import verifyAccessToken from "../../middlewares/verifyAccessToken.js";
 import chatVerification from "../../middlewares/chatsMiddleware/chatVerification.js";
-import chatModel from "../../database/schema/chatSchema/chatSchema.js";
+import chatModel from "../../models/chatSchema/chatSchema.js";
 
 const router = express.Router();
 

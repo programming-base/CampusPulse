@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import chatModel from '../../database/schema/chatSchema/chatSchema.js'
+import chatModel from '../../models/chatSchema/chatSchema.js'
 
 const chatVerification=async(req,res,next)=>{
     try{

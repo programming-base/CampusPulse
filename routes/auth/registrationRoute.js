@@ -1,9 +1,10 @@
 import express from "express";
 import bcrypt from "bcrypt";
-import userModel from "../../database/schema/authSchema/userSchema.js";
+import userModel from "../../models/authSchema/userSchema.js";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
-import tokenModel from "../../database/schema/authSchema/tokenSchema.js";
+import tokenModel from "../../models/authSchema/tokenSchema.js";
+import env from "../../config/env.js";
 
 const router = express.Router();
 
@@ -56,7 +57,7 @@ router.post("/auth/register", async (req, res) => {
     
     refreshToken = jwt.sign(
       {tokenId:tokenId,userId: savedUser._id, email, type: "refresh" },
-      process.env.JWT_REFRESH,
+      env.JWT.REFRESH,
       { expiresIn: "7d" },
     );
 
@@ -78,7 +79,7 @@ router.post("/auth/register", async (req, res) => {
         email: email,
         type: "access",
       },
-      process.env.JWT_ACCESS,
+      env.JWT.ACCESS,
       { expiresIn: "5m" },
     );
     res.status(201).json({

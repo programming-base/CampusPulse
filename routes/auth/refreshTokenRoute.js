@@ -1,6 +1,8 @@
 import express from "express";
 import JWT from "jsonwebtoken";
 import verifyRefreshToken from "../../middlewares/verifyRefreshToken.js";
+import env from "../../config/env.js";
+
 const router = express.Router();
 router.post("/auth/refresh", verifyRefreshToken, async (req, res) => {
   try {
@@ -11,7 +13,7 @@ router.post("/auth/refresh", verifyRefreshToken, async (req, res) => {
         email: data.email,
         type: "access",
       },
-      process.env.JWT_ACCESS,
+      env.JWT.ACCESS,
       { expiresIn: "5m" },
     );
     if (!newToken) {

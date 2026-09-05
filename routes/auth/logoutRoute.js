@@ -1,9 +1,11 @@
 import express from "express";
 import mongoose from "mongoose";
 import verifyAccessToken from "../../middlewares/verifyAccessToken.js";
-import tokenModel from "../../database/schema/authSchema/tokenSchema.js";
+import tokenModel from "../../models/authSchema/tokenSchema.js";
 import bcrypt from "bcrypt";
-import jwt from 'jsonwebtoken'
+import jwt from 'jsonwebtoken';
+import env from '../../config/env.js';
+
 const router = express.Router();
 
 router.post("/auth/logout", verifyAccessToken, async (req, res) => {
@@ -16,7 +18,7 @@ router.post("/auth/logout", verifyAccessToken, async (req, res) => {
         message: "Token is required",
       });
     }
-    const decodedRefreshToken=jwt.verify(refreshToken,process.env.JWT_REFRESH);
+    const decodedRefreshToken=jwt.verify(refreshToken,env.JWT.REFRESH);
     if(decodedRefreshToken.userId!==req.user.userId){
         return res.status(401).json({
             success: false,

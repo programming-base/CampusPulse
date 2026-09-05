@@ -1,5 +1,7 @@
 import JWT from 'jsonwebtoken';
-import userModel from '../database/schema/authSchema/userSchema.js';
+import userModel from '../models/authSchema/userSchema.js';
+import env from '../config/env.js';
+
 const verifyAccessToken= async (req,res,next)=>{
     try{
         const authHeader=req.headers.authorization;
@@ -8,7 +10,7 @@ const verifyAccessToken= async (req,res,next)=>{
         }
         const token = authHeader.split(' ')[1];
         let verify;
-        verify=JWT.verify(token,process.env.JWT_ACCESS);
+        verify=JWT.verify(token,env.JWT.ACCESS);
         if(verify.type !=='access'){
             return res.status(401).json({error:'Invalid token'})
         }

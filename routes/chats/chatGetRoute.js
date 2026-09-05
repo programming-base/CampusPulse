@@ -2,7 +2,7 @@ import express from "express";
 import verifyAccessToken from "../../middlewares/verifyAccessToken.js";
 import getUserChats from "../../middlewares/chatsMiddleware/getUserChats.js";
 import chatVerification from '../../middlewares/chatsMiddleware/chatVerification.js';
-import messageModel from '../../database/schema/chatSchema/messageSchema.js'
+import messageModel from '../../models/chatSchema/messageSchema.js'
 const router=express.Router();
 
 router.get('/chats',verifyAccessToken,getUserChats,async(req,res)=>{
@@ -28,7 +28,8 @@ router.get('/chats/:chatId/messages',verifyAccessToken,chatVerification,async(re
         const messages=await messageModel.find({chatId:chatId}).skip(skip).limit(limit).populate('chatId').populate('sender').sort({createdAt:1});
         const totalMessages=await messageModel.countDocuments({chatId:chatId});
         if(messages.length===0) {
-            return res.status(200).json({ success:true,
+            return res.status(200).json({ 
+                success:true,
                 data:messages,
                 page:page,
                 limit:limit,

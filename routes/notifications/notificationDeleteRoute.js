@@ -1,7 +1,7 @@
 import express from "express";
 import verifyAccessToken from "../../middlewares/verifyAccessToken.js";
 import mongoose from "mongoose";
-import notificationModel from "../../database/schema/notificationSchema/notificationSchema.js";
+import notificationModel from "../../models/notificationSchema/notificationSchema.js";
 const router=express.Router();
 
 

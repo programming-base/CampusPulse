@@ -1,6 +1,6 @@
 import express from "express";
 import verifyAccessToken from "../../middlewares/verifyAccessToken.js";
-import userModel from "../../database/schema/authSchema/userSchema.js";
+import userModel from "../../models/authSchema/userSchema.js";
 import validator from 'validator'
 const router = express.Router();
 

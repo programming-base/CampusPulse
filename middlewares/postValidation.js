@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import postModel from '../database/schema/postsSchema/postSchema.js';
+import postModel from '../models/postsSchema/postSchema.js';
 
 const postValidation=async(req,res,next)=>{
     try{

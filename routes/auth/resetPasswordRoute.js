@@ -2,9 +2,10 @@ import express from 'express';
 import nodemailer from 'nodemailer';
 import crypto from 'crypto';
 import bcrypt from 'bcrypt';
-import JWT from 'jsonwebtoken'
-import userModel from '../../database/schema/authSchema/userSchema.js';
-import otpModel from '../../database/schema/authSchema/otpSchema.js';
+import JWT from 'jsonwebtoken';
+import userModel from '../../models/authSchema/userSchema.js';
+import otpModel from '../../models/authSchema/otpSchema.js';
+import env from '../../config/env.js';
 
 const router =express.Router();
 
@@ -12,16 +13,16 @@ const OTP_MAX_ATTEMPTS = 5;
 const OTP_EXPIRY_MS = 10 * 60 * 1000;
 
 const createTransport = async () => {
-  const { SMTP_HOST, SMTP_PORT, SMTP_SECURE, SMTP_USER, SMTP_PASS } = process.env;
+  const { HOST, PORT, SECURE, USER, PASS } = env.SMTP;
 
-  if (SMTP_HOST && SMTP_PORT && SMTP_USER && SMTP_PASS) {
+  if (HOST && PORT && USER && PASS) {
     return nodemailer.createTransport({
-      host: SMTP_HOST,
-      port: Number(SMTP_PORT),
-      secure: SMTP_SECURE === 'true',
+      host: HOST,
+      port: PORT,
+      secure: SECURE,
       auth: {
-        user: SMTP_USER,
-        pass: SMTP_PASS,
+        user: USER,
+        pass: PASS,
       },
     });
   }
@@ -41,7 +42,7 @@ const createTransport = async () => {
 const sendResetOtpMail = async (email, otp) => {
   const transporter = await createTransport();
   const info = await transporter.sendMail({
-    from: process.env.SMTP_FROM || '"CampusPulse" <no-reply@campuspulse.local>',
+    from: env.SMTP.FROM,
     to: email,
     subject: 'CampusPulse Password Reset OTP',
     text: `Your CampusPulse OTP is ${otp}. It expires in 10 minutes.`,
@@ -75,7 +76,7 @@ router.post('/auth/reset-password',async (req,res)=>{
 
             const token = JWT.sign(
               { email, purpose: 'password-reset' },
-              process.env.JWT_ACCESS,
+              env.JWT.ACCESS,
               { expiresIn: '10m' }
             );
 
@@ -94,7 +95,7 @@ router.post('/auth/reset-password',async (req,res)=>{
 
         let decodedToken;
         try {
-          decodedToken = JWT.verify(resetToken, process.env.JWT_ACCESS);
+          decodedToken = JWT.verify(resetToken, env.JWT.ACCESS);
         } catch (_error) {
           return res.status(401).json({ error: 'Invalid or expired reset token' });
         }

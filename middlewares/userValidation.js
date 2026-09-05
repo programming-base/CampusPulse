@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import userModel from "../database/schema/authSchema/userSchema.js";
+import userModel from "../models/authSchema/userSchema.js";
 
 const userValidation = async (req, res, next) => {
   try {

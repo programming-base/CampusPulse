@@ -1,6 +1,6 @@
 import express from 'express';
 import verifyAccessToken from '../../middlewares/verifyAccessToken.js';
-import postModel from '../../database/schema/postsSchema/postSchema.js';
+import postModel from '../../models/postsSchema/postSchema.js';
 import postValidation from '../../middlewares/postValidation.js';
 const router =express.Router();
 

@@ -1,10 +1,10 @@
 import express from "express";
-import postModel from "../../database/schema/postsSchema/postSchema.js";
+import postModel from "../../models/postsSchema/postSchema.js";
 import verifyAccessToken from "../../middlewares/verifyAccessToken.js";
 import postValidation from "../../middlewares/postValidation.js";
-import commentModel from "../../database/schema/postsSchema/commentSchema.js";
+import commentModel from "../../models/postsSchema/commentSchema.js";
 import mongoose from "mongoose";
-import likeModel from "../../database/schema/postsSchema/likeSchema.js";
+import likeModel from "../../models/postsSchema/likeSchema.js";
 const router = express.Router();
 router.delete(
   "/posts/:postId",

@@ -1,5 +1,5 @@
 import express from "express";
-import followingModel from "../../database/schema/followSchema/followingSchema.js";
+import followModel from "../../models/followSchema/followSchema.js";
 import verifyAccessToken from "../../middlewares/verifyAccessToken.js";
 import userValidation from '../../middlewares/userValidation.js'
 const router = express.Router();
@@ -10,7 +10,7 @@ router.post('/users/:userId/follow',verifyAccessToken,userValidation,async (req,
         const client=req.user.userId.toString();
 
         if(targetUser===client) return res.status(400).json({error:'Bad request'});
-        const followTarget=await followingModel.create({userId:client,followingId:targetUser});
+        const followTarget=await followModel.create({followerId:client,followingId:targetUser});
         if(!followTarget) return res.status(500).json({error:'Internal server error'});
         res.status(200).json({success:true,message:'User followed'});
     }catch(error){
@@ -20,4 +20,4 @@ router.post('/users/:userId/follow',verifyAccessToken,userValidation,async (req,
 
 
 
-export default router
+export default router;

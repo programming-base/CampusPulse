@@ -1,7 +1,7 @@
 import express from "express";
 import verifyAccessToken from '../../middlewares/verifyAccessToken.js'
-import notificationModel from "../../database/schema/notificationSchema/notificationSchema.js";
-import notificationSettingsModel from "../../database/schema/notificationSchema/notificationSettingsSchema.js";
+import notificationModel from "../../models/notificationSchema/notificationSchema.js";
+import notificationSettingsModel from "../../models/notificationSchema/notificationSettingsSchema.js";
 const router=express.Router();
 
 router.get('/notifications',verifyAccessToken,async (req,res)=>{

@@ -1,4 +1,4 @@
-import chatModel from '../../database/schema/chatSchema/chatSchema.js'
+import chatModel from '../../models/chatSchema/chatSchema.js'
 
 const getUserChats= async (req,res,next)=>{
     try{

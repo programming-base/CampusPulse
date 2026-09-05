@@ -1,9 +1,11 @@
 import express from 'express';
 import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken'
-import userModel from '../../database/schema/authSchema/userSchema.js';
-import tokenModel from '../../database/schema/authSchema/tokenSchema.js'
+import jwt from 'jsonwebtoken';
+import userModel from '../../models/authSchema/userSchema.js';
+import tokenModel from '../../models/authSchema/tokenSchema.js';
 import mongoose from 'mongoose';
+import env from '../../config/env.js';
+
 const router=express.Router();
 
 router.post('/auth/login',async (req,res)=>{
@@ -26,7 +28,7 @@ router.post('/auth/login',async (req,res)=>{
             userId:user._id,
             email:email,
             type:'refresh'
-        },process.env.JWT_REFRESH,{expiresIn:'7d'})
+        },env.JWT.REFRESH,{expiresIn:'7d'})
         const hashedToken=await bcrypt.hash(refreshToken,10);
         const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
         const jsonToken={
@@ -43,7 +45,7 @@ router.post('/auth/login',async (req,res)=>{
             userId:user._id,
             email:email,
             type:'access'
-        },process.env.JWT_ACCESS,{expiresIn:'5m'})
+        },env.JWT.ACCESS,{expiresIn:'5m'})
         res.status(200).json({
             success:true,
             message:'logged in successfully',
