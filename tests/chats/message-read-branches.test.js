@@ -1,8 +1,8 @@
 import request from 'supertest';
 import mongoose from 'mongoose';
 import app from '../../app.js';
-import chatModel from '../../database/schema/chatSchema/chatSchema.js';
-import messageModel from '../../database/schema/chatSchema/messageSchema.js';
+import chatModel from '../../models/chatSchema/chatSchema.js';
+import messageModel from '../../models/chatSchema/messageSchema.js';
 import { testUser2, testUser3 } from '../fixtures/users.fixture.js';
 import { createTestUser } from '../helpers/auth.helpers.js';
 
@@ -17,7 +17,7 @@ describe('POST /api/chats/:chatId/messages/:messageId/read — branch coverage',
     const chat = await chatModel.create({
       type: 'group',
       participants: [user1Auth.user._id, user2Auth.user._id],
-      admin: [user1Auth.user._id],
+      admins: [user1Auth.user._id],
       description: 'Test group',
     });
     chatId = chat._id;
@@ -77,7 +77,7 @@ describe('POST /api/chats/:chatId/messages/:messageId/read — branch coverage',
     const otherChat = await chatModel.create({
       type: 'group',
       participants: [user1Auth.user._id, user3Auth.user._id],
-      admin: [user1Auth.user._id],
+      admins: [user1Auth.user._id],
     });
 
     // Message belongs to otherChat

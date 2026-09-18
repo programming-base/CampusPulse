@@ -72,7 +72,7 @@ router.post('/posts/:postId/comments',verifyAccessToken,postValidation,async(req
 router.post('/posts/:postId/like',verifyAccessToken,postValidation,async (req,res)=>{
     try{
         const postId=req.post._id;
-        const alreadyLiked=await likeModel.findOne({userId:req.user.userId,postId:postId,targetType:'post'});
+        const alreadyLiked=await likeModel.findOne({userId:req.user.userId,targetId:postId,targetType:'post'});
         if (alreadyLiked) return res.status(400).json({error:'Already liked'});
         let likeStructure={
             targetId:postId,

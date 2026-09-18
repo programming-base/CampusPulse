@@ -1,7 +1,7 @@
 import request from 'supertest';
 import mongoose from 'mongoose';
 import app from '../../app.js';
-import chatModel from '../../database/schema/chatSchema/chatSchema.js';
+import chatModel from '../../models/chatSchema/chatSchema.js';
 import { testUser2 } from '../fixtures/users.fixture.js';
 import { createTestUser } from '../helpers/auth.helpers.js';
 

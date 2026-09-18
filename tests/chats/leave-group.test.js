@@ -1,6 +1,6 @@
 import request from 'supertest';
 import app from '../../app.js';
-import chatModel from '../../database/schema/chatSchema/chatSchema.js';
+import chatModel from '../../models/chatSchema/chatSchema.js';
 import { testUser2, testUser3 } from '../fixtures/users.fixture.js';
 import { createTestUser } from '../helpers/auth.helpers.js';
 
@@ -17,7 +17,7 @@ describe('POST /api/chats/:chatId/leave — leave group', () => {
     const chat = await chatModel.create({
       type: 'group',
       participants: [adminAuth.user._id, user2Auth.user._id, user3Auth.user._id],
-      admin: [adminAuth.user._id],
+      admins: [adminAuth.user._id],
       description: 'Test group',
     });
 
@@ -41,7 +41,7 @@ describe('POST /api/chats/:chatId/leave — leave group', () => {
     const chat = await chatModel.create({
       type: 'group',
       participants: [adminAuth.user._id, user2Auth.user._id],
-      admin: [adminAuth.user._id], // Only admin
+      admins: [adminAuth.user._id], // Only admin
       description: 'Test group',
     });
 
@@ -57,7 +57,7 @@ describe('POST /api/chats/:chatId/leave — leave group', () => {
     const chat = await chatModel.create({
       type: 'group',
       participants: [adminAuth.user._id, user2Auth.user._id, user3Auth.user._id],
-      admin: [adminAuth.user._id, user2Auth.user._id], // Two admins
+      admins: [adminAuth.user._id, user2Auth.user._id], // Two admins
       description: 'Test group',
     });
 
@@ -73,7 +73,7 @@ describe('POST /api/chats/:chatId/leave — leave group', () => {
     const isParticipant = updatedChat.participants.some(
       (p) => p.toString() === adminAuth.user._id
     );
-    const isAdmin = updatedChat.admin.some(
+    const isAdmin = updatedChat.admins.some(
       (a) => a.toString() === adminAuth.user._id
     );
     expect(isParticipant).toBe(false);
@@ -84,7 +84,7 @@ describe('POST /api/chats/:chatId/leave — leave group', () => {
     const chat = await chatModel.create({
       type: 'group',
       participants: [adminAuth.user._id, user2Auth.user._id],
-      admin: [adminAuth.user._id],
+      admins: [adminAuth.user._id],
       description: 'Test group',
     });
 
@@ -100,7 +100,7 @@ describe('POST /api/chats/:chatId/leave — leave group', () => {
     const chat = await chatModel.create({
       type: 'group',
       participants: [adminAuth.user._id],
-      admin: [adminAuth.user._id],
+      admins: [adminAuth.user._id],
     });
 
     const res = await request(app)

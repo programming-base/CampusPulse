@@ -1,7 +1,7 @@
 import express from "express";
 import verifyAccessToken from "../../middlewares/verifyAccessToken.js";
 import userValidation from '../../middlewares/userValidation.js'
-import followModel from "../../models/followSchema/followingSchema.js";
+import followModel from "../../models/followSchema/followSchema.js";
 const router=express.Router();
 
 

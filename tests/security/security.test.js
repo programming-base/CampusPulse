@@ -1,9 +1,8 @@
 import request from 'supertest';
 import mongoose from 'mongoose';
 import app from '../../app.js';
-import notificationModel from '../../database/schema/notificationSchema/notificationSchema.js';
-import followingModel from '../../database/schema/followSchema/followingSchema.js';
-import likeModel from '../../database/schema/postsSchema/likeSchema.js';
+import notificationModel from '../../models/notificationSchema/notificationSchema.js';
+import likeModel from '../../models/postsSchema/likeSchema.js';
 import { testUser2, testUser3 } from '../fixtures/users.fixture.js';
 import { createTestUser } from '../helpers/auth.helpers.js';
 import { createPost, createNotification, createComment } from '../helpers/data.helpers.js';

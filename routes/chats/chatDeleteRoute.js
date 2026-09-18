@@ -1,5 +1,5 @@
 import express from "express";
-import mongoose, { modelNames, mongo } from "mongoose";
+import mongoose from "mongoose";
 import verifyAccessToken from "../../middlewares/verifyAccessToken.js";
 import chatVerification from "../../middlewares/chatsMiddleware/chatVerification.js";
 import chatModel from "../../models/chatSchema/chatSchema.js";
@@ -83,9 +83,10 @@ router.delete("/chats/:chatId/members/:userId",verifyAccessToken,chatVerificatio
       //Regular users  
       if(userId===req.user.userId){
         await chatModel.findByIdAndUpdate(chat._id,{
-            $pull:{
-                participants:userId
-            }
+          $pull:{
+            participants:userId,
+            admins:userId,
+          }
         })
         return res.status(200).json({
             success:true,
@@ -93,14 +94,19 @@ router.delete("/chats/:chatId/members/:userId",verifyAccessToken,chatVerificatio
         })
       }
 
-      if(!chat.admin.some(a=>a.toString()===req.user.userId)){
+      if(!chat.admins.some(a=>a.toString()===req.user.userId)){
         return res.status(403).json({
             success:false,
             message:'Only admins can remove the user'
         })
       }
       //Admin actions 
-        await chatModel.findByIdAndUpdate(chat._id,{$pull:{participants:userId}})
+        await chatModel.findByIdAndUpdate(chat._id,{
+          $pull: {
+            participants: userId,
+            admins: userId,
+          },
+        })
         return res.status(200).json({
             success:true,
             message:`Admin removed ${participant.userName}`

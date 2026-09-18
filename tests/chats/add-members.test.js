@@ -1,7 +1,7 @@
 import request from 'supertest';
 import mongoose from 'mongoose';
 import app from '../../app.js';
-import chatModel from '../../database/schema/chatSchema/chatSchema.js';
+import chatModel from '../../models/chatSchema/chatSchema.js';
 import { testUser2, testUser3 } from '../fixtures/users.fixture.js';
 import { createTestUser } from '../helpers/auth.helpers.js';
 
@@ -17,7 +17,7 @@ describe('POST /api/chats/:chatId/members — add members', () => {
     const chat = await chatModel.create({
       type: 'group',
       participants: [adminAuth.user._id, user2Auth.user._id],
-      admin: [adminAuth.user._id],
+      admins: [adminAuth.user._id],
       description: 'Test group',
     });
     chatId = chat._id;

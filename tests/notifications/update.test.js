@@ -1,7 +1,7 @@
 import request from 'supertest';
 import mongoose from 'mongoose';
 import app from '../../app.js';
-import notificationModel from '../../database/schema/notificationSchema/notificationSchema.js';
+import notificationModel from '../../models/notificationSchema/notificationSchema.js';
 import { createTestUser } from '../helpers/auth.helpers.js';
 import { createNotification } from '../helpers/data.helpers.js';
 import { testUser2 } from '../fixtures/users.fixture.js';

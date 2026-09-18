@@ -17,6 +17,9 @@ const env = {
     get SECRET() {
       return process.env.JWT_SECRET || process.env.JWT_ACCESS || 'default_secret';
     },
+    get RESET() {
+      return process.env.JWT_RESET_SECRET || process.env.JWT_SECRET || 'default_reset_secret';
+    },
   },
   CLOUDINARY: {
     get CLOUD_NAME() {

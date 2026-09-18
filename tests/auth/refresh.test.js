@@ -1,6 +1,6 @@
 import request from 'supertest';
 import app from '../../app.js';
-import tokenModel from '../../database/schema/authSchema/tokenSchema.js';
+import tokenModel from '../../models/authSchema/tokenSchema.js';
 import { createTestUser, generateExpiredToken } from '../helpers/auth.helpers.js';
 
 describe('POST /api/auth/refresh', () => {

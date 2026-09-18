@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 import mongoose from 'mongoose';
 import app from '../../app.js';
-import tokenModel from '../../database/schema/authSchema/tokenSchema.js';
+import tokenModel from '../../models/authSchema/tokenSchema.js';
 import { testUser2 } from '../fixtures/users.fixture.js';
 import { createTestUser, generateExpiredToken } from '../helpers/auth.helpers.js';
 

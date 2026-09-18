@@ -16,6 +16,7 @@ const likeSchema = new mongoose.Schema({
         required:true
     }
 },{timestamps:true})
-
+likeSchema.index({targetId:1,userId:1,targetType:1},{unique:true})
 const likeModel=mongoose.model('Like',likeSchema);
+
 export default likeModel;

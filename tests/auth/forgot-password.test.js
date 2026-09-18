@@ -1,6 +1,6 @@
 import request from 'supertest';
 import app from '../../app.js';
-import otpModel from '../../database/schema/authSchema/otpSchema.js';
+import otpModel from '../../models/authSchema/otpSchema.js';
 import { createTestUser } from '../helpers/auth.helpers.js';
 import { testUser } from '../fixtures/users.fixture.js';
 

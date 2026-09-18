@@ -1,6 +1,10 @@
 import mongoose from 'mongoose';
 
-const otpCollection=new mongoose.Schema({
+const otpSchema=new mongoose.Schema({
+    userId:{
+        type:mongoose.Schema.Types.ObjectId,
+        ref:'User',
+    },
     email:{
         type:String,
         required:true,        
@@ -21,14 +25,18 @@ const otpCollection=new mongoose.Schema({
     createdAt:{
         type:Date,
         default:Date.now,
-        expires:120
+        expires:15 * 60
     },
     attempts:{
         type:Number,
         default:0,
         max:5
+    },
+    otpUsed:{
+        type:Boolean,
+        default:false
     }
 })
 
-const otpModel=mongoose.model('Otp',otpCollection);
+const otpModel=mongoose.model('Otp',otpSchema);
 export default otpModel;

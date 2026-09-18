@@ -1,6 +1,6 @@
 import request from 'supertest';
 import app from '../../app.js';
-import followingModel from '../../database/schema/followSchema/followingSchema.js';
+import followModel from '../../models/followSchema/followSchema.js';
 import { testUser, testUser2 } from '../fixtures/users.fixture.js';
 import { createTestUser } from '../helpers/auth.helpers.js';
 
@@ -12,8 +12,8 @@ describe('DELETE /api/users/:userId/follow', () => {
     user2Auth = await createTestUser(testUser2);
 
     // user1 follows user2
-    await followingModel.create({
-      userId: user1Auth.user._id,
+    await followModel.create({
+      followerId: user1Auth.user._id,
       followingId: user2Auth.user._id,
     });
   });
@@ -28,8 +28,8 @@ describe('DELETE /api/users/:userId/follow', () => {
     expect(res.body).toHaveProperty('message', 'User Unfollowed');
 
     // Verify in DB
-    const followRecord = await followingModel.findOne({
-      userId: user1Auth.user._id,
+    const followRecord = await followModel.findOne({
+      followerId: user1Auth.user._id,
       followingId: user2Auth.user._id,
     });
     expect(followRecord).toBeNull();

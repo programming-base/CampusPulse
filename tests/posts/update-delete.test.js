@@ -1,6 +1,6 @@
 import request from 'supertest';
 import app from '../../app.js';
-import postModel from '../../database/schema/postsSchema/postSchema.js';
+import postModel from '../../models/postsSchema/postSchema.js';
 import { createTestUser } from '../helpers/auth.helpers.js';
 import { createPost } from '../helpers/data.helpers.js';
 import { testUser2 } from '../fixtures/users.fixture.js';

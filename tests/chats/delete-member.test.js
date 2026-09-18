@@ -1,7 +1,7 @@
 import request from 'supertest';
 import mongoose from 'mongoose';
 import app from '../../app.js';
-import chatModel from '../../database/schema/chatSchema/chatSchema.js';
+import chatModel from '../../models/chatSchema/chatSchema.js';
 import { testUser2, testUser3 } from '../fixtures/users.fixture.js';
 import { createTestUser } from '../helpers/auth.helpers.js';
 
@@ -12,7 +12,7 @@ import { createTestUser } from '../helpers/auth.helpers.js';
  *   - Invalid userId format → 400 (L64)
  *   - User not a participant → 404 (L76)
  *   - userId === req.user.userId (self-leave) → 200 (L84)
- *   - !chat.admin.equals(req.user.userId) → 403 (L96)
+ *   - requester not in admins → 403 (L96)
  *   - Admin removes member → 200 (L104)
  */
 describe('DELETE /api/chats/:chatId/members/:userId — member removal', () => {
@@ -26,7 +26,7 @@ describe('DELETE /api/chats/:chatId/members/:userId — member removal', () => {
     const chat = await chatModel.create({
       type: 'group',
       participants: [user1Auth.user._id, user2Auth.user._id, user3Auth.user._id],
-      admin: user1Auth.user._id,
+      admins: [user1Auth.user._id],
       description: 'Test group',
     });
     chatId = chat._id;
@@ -71,7 +71,7 @@ describe('DELETE /api/chats/:chatId/members/:userId — member removal', () => {
   });
 
   it('should return 403 when non-admin tries to remove another member', async () => {
-    // Branch: !chat.admin.equals(req.user.userId) (L96)
+    // Branch: requester is not in admins (L96)
     const res = await request(app)
       .delete(`/api/chats/${chatId}/members/${user3Auth.user._id}`)
       .set('Authorization', `Bearer ${user2Auth.accessToken}`);

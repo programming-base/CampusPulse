@@ -1,6 +1,6 @@
 import request from 'supertest';
 import app from '../../app.js';
-import followingModel from '../../database/schema/followSchema/followingSchema.js';
+import followModel from '../../models/followSchema/followSchema.js';
 import { testUser, testUser2 } from '../fixtures/users.fixture.js';
 import { createTestUser } from '../helpers/auth.helpers.js';
 
@@ -22,8 +22,8 @@ describe('POST /api/users/:userId/follow', () => {
     expect(res.body).toHaveProperty('message', 'User followed');
 
     // Verify in DB
-    const followRecord = await followingModel.findOne({
-      userId: user1Auth.user._id,
+    const followRecord = await followModel.findOne({
+      followerId: user1Auth.user._id,
       followingId: user2Auth.user._id,
     });
     expect(followRecord).not.toBeNull();

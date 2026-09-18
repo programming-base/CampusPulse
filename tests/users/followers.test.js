@@ -1,6 +1,6 @@
 import request from 'supertest';
 import app from '../../app.js';
-import followerModel from '../../database/schema/followSchema/followerSchema.js';
+import followModel from '../../models/followSchema/followSchema.js';
 import { testUser, testUser2 } from '../fixtures/users.fixture.js';
 import { createTestUser } from '../helpers/auth.helpers.js';
 
@@ -12,8 +12,8 @@ describe('GET /api/users/:userId/followers', () => {
     user2Auth = await createTestUser(testUser2);
 
     // Manually create a follower record (user2 follows user1)
-    await followerModel.create({
-      userId: user1Auth.user._id,
+    await followModel.create({
+      followingId: user1Auth.user._id,
       followerId: user2Auth.user._id,
     });
   });

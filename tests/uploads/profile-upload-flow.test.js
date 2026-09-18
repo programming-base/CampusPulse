@@ -1,6 +1,6 @@
 import request from 'supertest';
 import app from '../../app.js';
-import userModel from '../../database/schema/authSchema/userSchema.js';
+import userModel from '../../models/authSchema/userSchema.js';
 import { createTestUser } from '../helpers/auth.helpers.js';
 
 /**

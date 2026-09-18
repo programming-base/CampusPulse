@@ -1,6 +1,6 @@
 import request from 'supertest';
 import app from '../../app.js';
-import chatModel from '../../database/schema/chatSchema/chatSchema.js';
+import chatModel from '../../models/chatSchema/chatSchema.js';
 import { testUser2, testUser3 } from '../fixtures/users.fixture.js';
 import { createTestUser } from '../helpers/auth.helpers.js';
 
@@ -23,7 +23,7 @@ describe('PUT /api/chats/:chatId — chat settings', () => {
     const chat = await chatModel.create({
       type: 'group',
       participants: [user1Auth.user._id, user2Auth.user._id],
-      admin: user1Auth.user._id,
+      admins: [user1Auth.user._id],
       description: 'Original description',
     });
     chatId = chat._id;
@@ -49,7 +49,7 @@ describe('PUT /api/chats/:chatId — chat settings', () => {
 
     expect(res.statusCode).toBe(200);
     expect(res.body).toHaveProperty('success', true);
-    expect(res.body.chat).toHaveProperty('description', 'Updated description');
+    expect(res.body.data).toHaveProperty('description', 'Updated description');
   });
 
   it('should return 404 for non-participant', async () => {

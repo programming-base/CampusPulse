@@ -1,6 +1,6 @@
 import request from 'supertest';
 import app from '../../app.js';
-import chatModel from '../../database/schema/chatSchema/chatSchema.js';
+import chatModel from '../../models/chatSchema/chatSchema.js';
 import { testUser2 } from '../fixtures/users.fixture.js';
 import { createTestUser } from '../helpers/auth.helpers.js';
 
@@ -35,7 +35,7 @@ describe('getUserChats middleware (GET /api/chats)', () => {
     await chatModel.create({
       type: 'group',
       participants: [user1Auth.user._id, user2Auth.user._id],
-      admin: user1Auth.user._id,
+      admins: [user1Auth.user._id],
       description: 'Test group',
     });
 
@@ -53,13 +53,13 @@ describe('getUserChats middleware (GET /api/chats)', () => {
     await chatModel.create({
       type: 'group',
       participants: [user1Auth.user._id, user2Auth.user._id],
-      admin: user1Auth.user._id,
+      admins: [user1Auth.user._id],
       description: 'Group A',
     });
     await chatModel.create({
       type: 'group',
       participants: [user1Auth.user._id, user2Auth.user._id],
-      admin: user2Auth.user._id,
+      admins: [user2Auth.user._id],
       description: 'Group B',
     });
 

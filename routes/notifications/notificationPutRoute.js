@@ -14,7 +14,8 @@ router.put('/notifications/:notificationId/read',verifyAccessToken,async (req,re
                 message:'Invalid notification ID'
             })
         }
-        const updatedReadStatus=await notificationModel.findByIdAndUpdate(notificationId,{isRead:true},{new:true});
+        const recipient = req.user.userId;
+        const updatedReadStatus=await notificationModel.findOneAndUpdate({_id:notificationId,recipient:recipient},{isRead:true},{new:true});
         if(!updatedReadStatus){
             return res.status(404).json({
                 success:false,

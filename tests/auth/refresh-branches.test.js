@@ -1,8 +1,8 @@
 import request from 'supertest';
 import jwt from 'jsonwebtoken';
 import app from '../../app.js';
-import tokenModel from '../../database/schema/authSchema/tokenSchema.js';
-import userModel from '../../database/schema/authSchema/userSchema.js';
+import tokenModel from '../../models/authSchema/tokenSchema.js';
+import userModel from '../../models/authSchema/userSchema.js';
 import { createTestUser, generateAccessToken } from '../helpers/auth.helpers.js';
 
 describe('POST /api/auth/refresh — branch coverage', () => {

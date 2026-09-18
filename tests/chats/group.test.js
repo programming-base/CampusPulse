@@ -1,6 +1,6 @@
 import request from 'supertest';
 import app from '../../app.js';
-import chatModel from '../../database/schema/chatSchema/chatSchema.js';
+import chatModel from '../../models/chatSchema/chatSchema.js';
 import { testUser2, testUser3 } from '../fixtures/users.fixture.js';
 import { createTestUser } from '../helpers/auth.helpers.js';
 
@@ -24,10 +24,9 @@ describe('Group Chat API', () => {
           memberIds: [user1Auth.user._id, user2Auth.user._id],
         });
 
-      expect(res.statusCode).toBe(200);
-      expect(res.body).toHaveProperty('type', 'group');
-      expect(res.body.participants).toContain(user1Auth.user._id);
-      expect(res.body.participants).toContain(user2Auth.user._id);
+      expect(res.statusCode).toBe(201);
+      expect(res.body.data).toHaveProperty('type', 'group');
+      expect(res.body.data.participants).toHaveLength(2);
     });
 
     it('should return 400 if name is missing', async () => {
@@ -39,7 +38,7 @@ describe('Group Chat API', () => {
         });
 
       expect(res.statusCode).toBe(400);
-      expect(res.body).toHaveProperty('message', 'Necessary fields are missing');
+      expect(res.body).toHaveProperty('message', 'Group name is required');
     });
 
     it('should return 400 if memberIds is missing', async () => {
@@ -67,21 +66,16 @@ describe('Group Chat API', () => {
     let chatId;
 
     beforeEach(async () => {
-      // Known bug: The leave route calls req.chat.admin.some() but admin is a single ObjectId,
-      // not an array. This causes a crash (500) for participants.
-      // The isMember check uses req.chat.participants.some() which works because participants IS an array.
-      // But then the isAdmin check uses req.chat.admin.some() which crashes for non-admin users.
       const chat = await chatModel.create({
         type: 'group',
         participants: [user1Auth.user._id, user2Auth.user._id, user3Auth.user._id],
-        admin: user1Auth.user._id,
+        admins: [user1Auth.user._id],
         description: 'Test group',
       });
       chatId = chat._id;
     });
 
     it('should allow a non-admin member to leave the group', async () => {
-      // admin IS an array in chatSchema, so .some() works correctly.
       const res = await request(app)
         .post(`/api/chats/${chatId}/leave`)
         .set('Authorization', `Bearer ${user2Auth.accessToken}`);

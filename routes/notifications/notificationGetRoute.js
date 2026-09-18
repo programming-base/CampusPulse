@@ -26,7 +26,6 @@ router.get('/notifications',verifyAccessToken,async (req,res)=>{
                 limit:limit,
                 total:total_notifications,
                 hasMore:total_notifications>(page*limit)
-
             }
         }
         res.status(200).json(responseJson);
@@ -37,7 +36,6 @@ router.get('/notifications',verifyAccessToken,async (req,res)=>{
         });
     }
 })
-
 router.get('/notifications/unread-count',verifyAccessToken,async(req,res)=>{
     try{
         const notification_count=await notificationModel.countDocuments({recipient:req.user.userId});
@@ -45,6 +43,7 @@ router.get('/notifications/unread-count',verifyAccessToken,async(req,res)=>{
             success:true,
             data:{
                 count:notification_count
+            
             }
         })
     }catch(error){
@@ -57,7 +56,7 @@ router.get('/notifications/unread-count',verifyAccessToken,async(req,res)=>{
 
 router.get('/notifications/settings',verifyAccessToken,async(req,res)=>{
     try{   
-        const settings=await notificationSettingsModel.findOne({userId:req.user.userId}) 
+        const settings=await notificationSettingsModel.find({userId:req.user.userId}) 
         res.status(200).json({
             success:true,
             data:settings

@@ -1,15 +1,13 @@
 import request from 'supertest';
 import app from '../../app.js';
-import chatModel from '../../database/schema/chatSchema/chatSchema.js';
+import chatModel from '../../models/chatSchema/chatSchema.js';
 import { testUser2, testUser3 } from '../fixtures/users.fixture.js';
 import { createTestUser } from '../helpers/auth.helpers.js';
 
 /**
  * Security-focused tests for chat routes.
  *
- * BUG EXPOSURE: chatPutRoute.js L25 — Mass assignment vulnerability.
- * The PUT handler applies `$set: modifications` directly from req.body,
- * allowing attackers to overwrite admin, participants, type, etc.
+ * Protected Chat fields must not be writable through the settings endpoint.
  */
 describe('Chat Security Tests', () => {
   let adminAuth, user2Auth, user3Auth, chatId;
@@ -22,74 +20,71 @@ describe('Chat Security Tests', () => {
     const chat = await chatModel.create({
       type: 'group',
       participants: [adminAuth.user._id, user2Auth.user._id],
-      admin: [adminAuth.user._id],
+      admins: [adminAuth.user._id],
       description: 'Original description',
     });
     chatId = chat._id;
   });
 
   describe('Mass Assignment via PUT /api/chats/:chatId', () => {
-    it('BUG: should NOT allow overwriting admin via PUT body (mass assignment)', async () => {
+    it('should not allow overwriting admins via PUT body', async () => {
       // SECURITY BUG: The route applies $set: modifications directly
       // A malicious user can overwrite the admin array
       const res = await request(app)
         .put(`/api/chats/${chatId}`)
-        .set('Authorization', `Bearer ${user2Auth.accessToken}`)
-        .send({ admin: [user2Auth.user._id] });
+        .set('Authorization', `Bearer ${adminAuth.accessToken}`)
+        .send({ admins: [user2Auth.user._id] });
 
       // The route succeeds because it doesn't validate which fields can be modified
-      expect(res.statusCode).toBe(200);
+      expect(res.statusCode).toBe(400);
 
       // Verify: admin was overwritten (this IS the bug — it shouldn't be allowed)
       const chat = await chatModel.findById(chatId);
-      const isUser2Admin = chat.admin.some(
-        (a) => a.toString() === user2Auth.user._id
+      const isUser1Admin = chat.admins.some(
+        (admin) => admin.toString() === adminAuth.user._id
       );
       // BUG: This passes, proving the mass assignment vulnerability
-      expect(isUser2Admin).toBe(true);
+      expect(isUser1Admin).toBe(true);
     });
 
-    it('BUG: should NOT allow overwriting participants via PUT body', async () => {
+    it('should not allow overwriting participants via PUT body', async () => {
       const res = await request(app)
         .put(`/api/chats/${chatId}`)
-        .set('Authorization', `Bearer ${user2Auth.accessToken}`)
+        .set('Authorization', `Bearer ${adminAuth.accessToken}`)
         .send({ participants: [user2Auth.user._id] });
 
-      expect(res.statusCode).toBe(200);
+      expect(res.statusCode).toBe(400);
 
       // Verify: admin was removed from participants (shouldn't be possible)
       const chat = await chatModel.findById(chatId);
       const isAdminParticipant = chat.participants.some(
         (p) => p.toString() === adminAuth.user._id
       );
-      // BUG: Admin is no longer a participant because PUT overwrote the array
-      expect(isAdminParticipant).toBe(false);
+      expect(isAdminParticipant).toBe(true);
     });
 
-    it('BUG: should NOT allow changing chat type via PUT body', async () => {
+    it('should not allow changing chat type via PUT body', async () => {
       const res = await request(app)
         .put(`/api/chats/${chatId}`)
-        .set('Authorization', `Bearer ${user2Auth.accessToken}`)
+        .set('Authorization', `Bearer ${adminAuth.accessToken}`)
         .send({ type: 'dm' });
 
-      expect(res.statusCode).toBe(200);
+      expect(res.statusCode).toBe(400);
 
-      // BUG: Type was changed from 'group' to 'dm'
       const chat = await chatModel.findById(chatId);
-      expect(chat.type).toBe('dm');
+      expect(chat.type).toBe('group');
     });
 
-    it('BUG: should NOT allow overwriting messageCount via PUT body', async () => {
+    it('should not allow overwriting messageCount via PUT body', async () => {
       const res = await request(app)
         .put(`/api/chats/${chatId}`)
-        .set('Authorization', `Bearer ${user2Auth.accessToken}`)
+        .set('Authorization', `Bearer ${adminAuth.accessToken}`)
         .send({ messageCount: 99999 });
 
-      expect(res.statusCode).toBe(200);
+      expect(res.statusCode).toBe(400);
 
-      // BUG: messageCount was artificially inflated
       const chat = await chatModel.findById(chatId);
-      expect(chat.messageCount).toBe(99999);
+      expect(chat.messageCount).toBe(0);
     });
   });
 

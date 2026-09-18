@@ -1,147 +1,269 @@
-import express from 'express';
-import nodemailer from 'nodemailer';
-import crypto from 'crypto';
-import bcrypt from 'bcrypt';
-import JWT from 'jsonwebtoken';
-import userModel from '../../models/authSchema/userSchema.js';
-import otpModel from '../../models/authSchema/otpSchema.js';
-import env from '../../config/env.js';
+import express from "express";
+import bcrypt from "bcrypt";
+import JWT from "jsonwebtoken";
 
-const router =express.Router();
+import userModel from "../../models/authSchema/userSchema.js";
+import otpModel from "../../models/authSchema/otpSchema.js";
+import tokenModel from "../../models/authSchema/tokenSchema.js";
+import env from "../../config/env.js";
 
-const OTP_MAX_ATTEMPTS = 5;
-const OTP_EXPIRY_MS = 10 * 60 * 1000;
+const router = express.Router();
 
-const createTransport = async () => {
-  const { HOST, PORT, SECURE, USER, PASS } = env.SMTP;
+const RESET_TOKEN_EXPIRY_MS = 15 * 60 * 1000;
 
-  if (HOST && PORT && USER && PASS) {
-    return nodemailer.createTransport({
-      host: HOST,
-      port: PORT,
-      secure: SECURE,
-      auth: {
-        user: USER,
-        pass: PASS,
-      },
-    });
-  }
+router.post("/auth/password/reset", async (req, res) => {
 
-  const testAccount = await nodemailer.createTestAccount();
-  return nodemailer.createTransport({
-    host: 'smtp.ethereal.email',
-    port: 587,
-    secure: false,
-    auth: {
-      user: testAccount.user,
-      pass: testAccount.pass,
-    },
-  });
-};
+    try {
 
-const sendResetOtpMail = async (email, otp) => {
-  const transporter = await createTransport();
-  const info = await transporter.sendMail({
-    from: env.SMTP.FROM,
-    to: email,
-    subject: 'CampusPulse Password Reset OTP',
-    text: `Your CampusPulse OTP is ${otp}. It expires in 10 minutes.`,
-    html: `<p>Your CampusPulse OTP is <strong>${otp}</strong>.</p><p>It expires in 10 minutes.</p>`,
-  });
+        const resetToken = String(
+            req.body.resetToken || ""
+        ).trim();
 
-  const previewUrl = nodemailer.getTestMessageUrl(info);
-  return previewUrl || null;
-};
+        const newPassword = req.body.newPassword;
 
-router.post('/auth/reset-password',async (req,res)=>{
+        /*
+         * Validate input
+         */
 
-    try{
-        const { email, otp, newPassword, resetToken } = req.body;
-
-        if(!email){
-            return res.status(400).json({error:'Email is required'})
+        if (!resetToken || !newPassword) {
+            return res.status(400).json({
+                success: false,
+                message: "Reset token and new password are required",
+            });
         }
 
-        const user = await userModel.findOne({ email }).select('email password');
-        if(!user){
-            return res.status(400).json({error:'The email is not valid'})
+        /*
+         * Validate password
+         */
+
+        if (
+            typeof newPassword !== "string" ||
+            newPassword.length < 8 ||
+            newPassword.length > 128
+        ) {
+            return res.status(400).json({
+                success: false,
+                message: "Password must be between 8 and 128 characters",
+            });
         }
 
-        const isVerificationRequest = Boolean(otp && newPassword && resetToken);
-
-        if(!isVerificationRequest){
-            const otpCode = crypto.randomInt(100000,1000000).toString();
-            const hashedOtp = await bcrypt.hash(otpCode,10);
-            if(!hashedOtp) return res.status(500).json({message:'Internal server error'})
-
-            const token = JWT.sign(
-              { email, purpose: 'password-reset' },
-              env.JWT.ACCESS,
-              { expiresIn: '10m' }
-            );
-
-            await otpModel.deleteMany({ email });
-            await otpModel.create({ otp: hashedOtp, email, token, createdAt: new Date() });
-
-            const previewUrl = await sendResetOtpMail(email, otpCode);
-            const responsePayload = { message: 'OTP sent to email', resetToken: token };
-
-            if (previewUrl) {
-              responsePayload.previewUrl = previewUrl;
-            }
-
-            return res.status(200).json(responsePayload);
-        }
+        /*
+         * Verify JWT
+         */
 
         let decodedToken;
+
         try {
-          decodedToken = JWT.verify(resetToken, env.JWT.ACCESS);
+
+            decodedToken = JWT.verify(
+                resetToken,
+                env.JWT.RESET
+            );
+
         } catch (_error) {
-          return res.status(401).json({ error: 'Invalid or expired reset token' });
+
+            return res.status(401).json({
+                success: false,
+                message: "Invalid or expired reset token",
+            });
         }
 
-        if(decodedToken.email !== email || decodedToken.purpose !== 'password-reset'){
-          return res.status(401).json({ error: 'Invalid reset token payload' });
+        /*
+         * Validate token payload
+         */
+
+        if (
+            decodedToken.purpose !== "password-reset" ||
+            !decodedToken.userId ||
+            !decodedToken.jti
+        ) {
+            return res.status(401).json({
+                success: false,
+                message: "Invalid reset token",
+            });
         }
 
-        const otpDoc = await otpModel.findOne({ email, token: resetToken }).sort({ createdAt: -1 });
-        if(!otpDoc){
-          return res.status(400).json({error:'OTP not found. Request a new OTP'})
+        /*
+         * Find reset-token record.
+         *
+         * jti binds this exact JWT to this exact DB record.
+         */
+
+        const resetRequest = await otpModel.findOne({
+            userId: decodedToken.userId,
+            jti: decodedToken.jti,
+            otpType: "reset-password",
+            otpUsed: false,
+        });
+
+        if (!resetRequest) {
+            return res.status(401).json({
+                success: false,
+                message: "Invalid or expired reset token",
+            });
         }
 
-        const otpAge = Date.now() - new Date(otpDoc.createdAt).getTime();
-        if(otpAge > OTP_EXPIRY_MS){
-          await otpModel.deleteMany({ email });
-          return res.status(400).json({error:'OTP has expired. Request a new OTP'})
+        /*
+         * Check reset-token expiration
+         */
+
+        const tokenAge =
+            Date.now() -
+            new Date(resetRequest.createdAt).getTime();
+
+        if (tokenAge > RESET_TOKEN_EXPIRY_MS) {
+
+            await otpModel.deleteOne({
+                _id: resetRequest._id,
+            });
+
+            return res.status(401).json({
+                success: false,
+                message: "Invalid or expired reset token",
+            });
         }
 
-        if(otpDoc.attempts >= OTP_MAX_ATTEMPTS){
-          return res.status(429).json({error:'Maximum OTP attempts reached. Request a new OTP'})
+        /*
+         * Compare supplied JWT against stored hash
+         */
+
+        const isResetTokenValid =
+            await bcrypt.compare(
+                resetToken,
+                resetRequest.token
+            );
+
+        if (!isResetTokenValid) {
+            return res.status(401).json({
+                success: false,
+                message: "Invalid or expired reset token",
+            });
         }
 
-        const isOtpValid = await bcrypt.compare(String(otp), otpDoc.otp);
-        if(!isOtpValid){
-          await otpModel.updateOne({ _id: otpDoc._id }, { $inc: { attempts: 1 } });
-          return res.status(400).json({error:'Invalid OTP'})
+        /*
+         * Find user
+         */
+
+        const user = await userModel
+            .findById(decodedToken.userId)
+            .select("_id password");
+
+        if (!user) {
+            return res.status(401).json({
+                success: false,
+                message: "Invalid or expired reset token",
+            });
         }
 
-        const isSamePassword = await bcrypt.compare(newPassword, user.password);
-        if(isSamePassword){
-          return res.status(400).json({error:'New password must be different from old password'})
+        /*
+         * Prevent password reuse
+         */
+
+        const isSamePassword =
+            await bcrypt.compare(
+                newPassword,
+                user.password
+            );
+
+        if (isSamePassword) {
+            return res.status(400).json({
+                success: false,
+                message: "New password must be different from old password",
+            });
         }
 
-        const hashedPassword = await bcrypt.hash(newPassword,10);
-        if(!hashedPassword){
-          return res.status(500).json({message:'Password hashing failed'})
+        /*
+         * Hash new password
+         */
+
+        const hashedPassword =
+            await bcrypt.hash(newPassword, 12);
+
+        /*
+         * Atomically consume reset token.
+         *
+         * This prevents the same reset token from
+         * being used twice simultaneously.
+         */
+
+        const claimedResetRequest =
+            await otpModel.findOneAndUpdate(
+                {
+                    _id: resetRequest._id,
+                    otpUsed: false,
+                },
+                {
+                    $set: {
+                        otpUsed: true,
+                    },
+                },
+                {
+                    new: true,
+                }
+            );
+
+        if (!claimedResetRequest) {
+            return res.status(401).json({
+                success: false,
+                message: "Invalid or expired reset token",
+            });
         }
 
-        await userModel.updateOne({ email }, { $set: { password: hashedPassword } });
-        await otpModel.deleteMany({ email });
+        /*
+         * Update password
+         */
 
-        return res.status(200).json({message:'Password reset successful'})
-    }catch(err){
-        return res.status(500).json({error:'Server error'})
+        await userModel.updateOne(
+            {
+                _id: user._id,
+            },
+            {
+                $set: {
+                    password: hashedPassword,
+                },
+            }
+        );
+
+        /*
+         * Delete all password-reset records
+         */
+
+        await otpModel.deleteMany({
+            userId: user._id,
+        });
+
+        /*
+         * Revoke all refresh tokens.
+         *
+         * This logs the user out from other devices.
+         */
+
+        await tokenModel.updateMany(
+            {
+                userId: user._id,
+                type: "refresh",
+            },
+            {
+                $set: {
+                    isRevoked: true,
+                },
+            }
+        );
+
+        return res.status(200).json({
+            success: true,
+            message: "Password reset successful",
+        });
+
+    } catch (error) {
+
+        console.error("Password reset error:", error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Internal server error",
+        });
     }
-    
-})
+});
+
 export default router;

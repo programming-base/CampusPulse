@@ -1,7 +1,7 @@
 import request from 'supertest';
 import mongoose from 'mongoose';
 import app from '../../app.js';
-import commentModel from '../../database/schema/postsSchema/commentSchema.js';
+import commentModel from '../../models/postsSchema/commentSchema.js';
 import { testUser2 } from '../fixtures/users.fixture.js';
 import { createTestUser } from '../helpers/auth.helpers.js';
 import { createPost, createComment } from '../helpers/data.helpers.js';

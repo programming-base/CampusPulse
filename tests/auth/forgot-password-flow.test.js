@@ -2,8 +2,8 @@ import request from 'supertest';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import app from '../../app.js';
-import otpModel from '../../database/schema/authSchema/otpSchema.js';
-import userModel from '../../database/schema/authSchema/userSchema.js';
+import otpModel from '../../models/authSchema/otpSchema.js';
+import userModel from '../../models/authSchema/userSchema.js';
 import { createTestUser } from '../helpers/auth.helpers.js';
 import { testUser } from '../fixtures/users.fixture.js';
 

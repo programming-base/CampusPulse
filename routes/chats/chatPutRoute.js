@@ -12,32 +12,81 @@ router.put(
   chatVerification,
   async (req, res) => {
     try {
-      const modifications = req.body;
+      const { name, description } = req.body;
+      const userId = req.user.userId;
+
+      const isAdmin = req.chat.admins.some(
+        (admin) => admin.toString() === userId.toString()
+      );
+
+      if (!isAdmin) {
+        return res.status(403).json({
+          success: false,
+          message: "Only group admins can modify group settings",
+        });
+      }
+
+      const modifications = {};
+
+      if (name !== undefined) {
+        if (typeof name !== "string" || !name.trim()) {
+          return res.status(400).json({
+            success: false,
+            message: "Group name must be a non-empty string",
+          });
+        }
+
+        modifications.name = name.trim();
+      }
+
+      if (description !== undefined) {
+        if (typeof description !== "string") {
+          return res.status(400).json({
+            success: false,
+            message: "Group description must be a string",
+          });
+        }
+
+        modifications.description = description.trim();
+      }
 
       if (Object.keys(modifications).length === 0) {
         return res.status(400).json({
           success: false,
-          message: "Modification fields are empty",
+          message: "No valid group settings provided",
         });
       }
+
       const updatedChat = await chatModel.findByIdAndUpdate(
         req.chat._id,
         { $set: modifications },
-        { new: true, runValidators: true },
+        {
+          new: true,
+          runValidators: true,
+        }
       );
+
       if (!updatedChat) {
-        return res
-          .status(404)
-          .json({ success: false, message: "Chat not found" });
+        return res.status(404).json({
+          success: false,
+          message: "Chat not found",
+        });
       }
 
-      res.json({ success: true, chat: updatedChat });
+      return res.status(200).json({
+        success: true,
+        data: updatedChat,
+      });
     } catch (error) {
-      res.status(500).json({
+      console.error("Update group chat error:", error);
+
+      return res.status(500).json({
         success: false,
         message: "Internal server error",
       });
     }
-  },
+  }
 );
+
+
 export default router;

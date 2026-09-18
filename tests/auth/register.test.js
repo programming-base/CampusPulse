@@ -1,8 +1,8 @@
 import request from 'supertest';
 import mongoose from 'mongoose';
 import app from '../../app.js';
-import userModel from '../../database/schema/authSchema/userSchema.js';
-import tokenModel from '../../database/schema/authSchema/tokenSchema.js';
+import userModel from '../../models/authSchema/userSchema.js';
+import tokenModel from '../../models/authSchema/tokenSchema.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { testUser, testUser2 } from '../fixtures/users.fixture.js';

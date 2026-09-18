@@ -8,6 +8,7 @@ import resetPasswordRoute from './routes/auth/resetPasswordRoute.js';
 import refreshTokenRoute from './routes/auth/refreshTokenRoute.js';
 import verifyRoute from './routes/auth/verifyRoute.js';
 import forgotPasswordRoute from './routes/auth/forgotPasswordRoute.js';
+import verifyOtpRoute from './routes/auth/verifyOtp.js';
 
 import usersGetRoute from './routes/users/usersGetRoute.js';
 import usersDeleteRoute from './routes/users/usersDeleteRoute.js'; 
@@ -52,6 +53,7 @@ app.use('/api',resetPasswordRoute);
 app.use('/api',refreshTokenRoute);
 app.use('/api',verifyRoute);
 app.use('/api',forgotPasswordRoute);
+app.use('/api',verifyOtpRoute);
 
 app.use('/api',usersGetRoute);
 app.use('/api',usersDeleteRoute);
