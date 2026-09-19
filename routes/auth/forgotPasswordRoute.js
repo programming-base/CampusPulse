@@ -139,10 +139,12 @@ router.post("/auth/password/forgot", async (req, res) => {
             userId: user._id,
             otpType: "forgot-password",
         });
+        const jti=crypto.randomUUID();
         await otpModel.create({
             userId: user._id,
             email: user.email,
             otp: otpHash,
+            jti:jti,
             token: null,
             otpType: "forgot-password",
             attempts: 0,

@@ -10,7 +10,7 @@ router.delete('/users/:userId/follow',verifyAccessToken,userValidation,async (re
         const client =req.user.userId;
         const targetUser=req.presentUser._id.toString();
         if(client=== targetUser){
-            return res.status(400).json({error:'Bad requesst'})
+            return res.status(400).json({error:'Bad request'})
         }
         const isTargetValid= await followModel.findOne({followerId:client,followingId:targetUser})
         if(!isTargetValid) return res.status(401).json({error:'Unauthorized'})

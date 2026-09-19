@@ -12,15 +12,15 @@ router.post('/users/:userId/follow',verifyAccessToken,userValidation,async (req,
         if (targetUser === client) {
             return res.status(400).json({ error: 'Cannot follow yourself' });
         }
-        const isAlreadyFollowing=await followModel.find({followerId:client,followingId:targetUser});
-        if(isAlreadyFollowing.length==0){
-            return res.status(400).json({error:'Bad request'});
+        const isAlreadyFollowing=await followModel.findOne({followerId:client,followingId:targetUser});
+        if(isAlreadyFollowing){
+            return res.status(400).json({error:'Already following this user'});
         }
         await followModel.create({followerId:client,followingId:targetUser});
         res.status(200).json({success:true,message:'User followed'});
     }catch(error){
         res.status(500).json({
-            success:true,
+            success:false,
             error:'Internal server error'
         });
     }

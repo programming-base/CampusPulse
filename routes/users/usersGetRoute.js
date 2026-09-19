@@ -28,8 +28,8 @@ router.get('/users/search',verifyAccessToken,async(req,res)=>{
                 data:[]
             })
         }
-        let totalUsers=await userModel.find(searchJson)
-        let totalPages=Math.ceil(totalUsers.length/limit)
+        const totalUsers = await userModel.countDocuments(searchJson);
+        let totalPages=Math.ceil(totalUsers/limit)
         let responseJson={
             success:true,
             data:user,
