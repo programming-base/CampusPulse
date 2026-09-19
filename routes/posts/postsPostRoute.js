@@ -25,6 +25,7 @@ router.post('/posts',verifyAccessToken,async(req,res)=>{
                 content:content,
                 visibilityScope:visibilityScope,
                 imageUrl:imageUrl,
+                college:userInDB.college,
                 department:userInDB.department,
                 academicYear:userInDB.academicYear,
                 likeCount:0,

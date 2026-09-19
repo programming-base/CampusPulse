@@ -38,7 +38,10 @@ router.get('/notifications',verifyAccessToken,async (req,res)=>{
 })
 router.get('/notifications/unread-count',verifyAccessToken,async(req,res)=>{
     try{
-        const notification_count=await notificationModel.countDocuments({recipient:req.user.userId});
+        const notification_count=await notificationModel.countDocuments({
+            recipient:req.user.userId,
+            isRead:false
+        });
         res.status(200).json({
             success:true,
             data:{
