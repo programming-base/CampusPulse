@@ -15,6 +15,14 @@ const postSchema = new mongoose.Schema({
     userName: {
         type: String,
     },
+    college:{
+        type:String,
+        required:true,
+        trim:true,
+        minlength:[2,'College name must be at least 2 characters'],
+        maxlength:[100,'College name must not exceed 100 characters']
+    }
+    ,
     department: String,
     academicYear: {
         type: Number,

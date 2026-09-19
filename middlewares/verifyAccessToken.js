@@ -18,6 +18,7 @@ const verifyAccessToken= async (req,res,next)=>{
         if(!isUser){
             return res.status(400).json({error:'User not found'})
         }
+        req.userProfile=isUser;
         req.user=verify;
         next();
     }catch(err){

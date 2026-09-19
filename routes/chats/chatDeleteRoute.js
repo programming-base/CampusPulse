@@ -6,7 +6,10 @@ import chatModel from "../../models/chatSchema/chatSchema.js";
 import messageModel from "../../models/chatSchema/messageSchema.js";
 const router = express.Router();
 
-router.delete("/chats/:chatId/messages/:messageId",verifyAccessToken,chatVerification,
+router.delete(
+  "/chats/:chatId/messages/:messageId",
+  verifyAccessToken,
+  chatVerification,
   async (req, res) => {
     try {
       const { messageId } = req.params;
@@ -28,11 +31,15 @@ router.delete("/chats/:chatId/messages/:messageId",verifyAccessToken,chatVerific
           message: "You are not a participant in this chat",
         });
       }
-      const message = await messageModel.findById(messageId);
+      const message = await messageModel.findOne({
+        _id: messageId,
+        chatId: req.chat._id,
+        sender: req.user.userId,
+      });
       if (!message) {
         return res.status(401).json({
           success: false,
-          message: "Message not found",
+          message: "Message not found or not owned by you",
         });
       }
       if (!message.sender.equals(req.user.userId)) {
@@ -42,7 +49,17 @@ router.delete("/chats/:chatId/messages/:messageId",verifyAccessToken,chatVerific
         });
       }
 
-      await messageModel.findByIdAndDelete(messageId);
+      const deletedMessage = await messageModel.findOneAndDelete({
+        _id: messageId,
+        chatId: req.chat._id,
+      });
+
+      if(!deletedMessage){
+        return res.status(404).json({
+        success: true,
+        message: "Message not found",
+      });
+      }
       res.status(200).json({
         success: true,
         message: "Message deleted",
@@ -57,7 +74,10 @@ router.delete("/chats/:chatId/messages/:messageId",verifyAccessToken,chatVerific
   },
 );
 
-router.delete("/chats/:chatId/members/:userId",verifyAccessToken,chatVerification,
+router.delete(
+  "/chats/:chatId/members/:userId",
+  verifyAccessToken,
+  chatVerification,
   async (req, res) => {
     try {
       const { userId } = req.params;
@@ -70,53 +90,54 @@ router.delete("/chats/:chatId/members/:userId",verifyAccessToken,chatVerificatio
       const chat = await req.chat.populate({
         path: "participants",
         match: { _id: userId },
-        select:"userName"
+        select: "userName",
       });
       const participant = chat.participants[0];
       if (!participant) {
         return res.status(404).json({
           success: false,
-          message: 'User is not a participant in this chat',
+          message: "User is not a participant in this chat",
         });
       }
 
-      //Regular users  
-      if(userId===req.user.userId){
-        await chatModel.findByIdAndUpdate(chat._id,{
-          $pull:{
-            participants:userId,
-            admins:userId,
-          }
-        })
-        return res.status(200).json({
-            success:true,
-            message:"You left the group"
-        })
-      }
-
-      if(!chat.admins.some(a=>a.toString()===req.user.userId)){
-        return res.status(403).json({
-            success:false,
-            message:'Only admins can remove the user'
-        })
-      }
-      //Admin actions 
-        await chatModel.findByIdAndUpdate(chat._id,{
+      //Regular users
+      if (userId === req.user.userId) {
+        await chatModel.findByIdAndUpdate(chat._id, {
           $pull: {
             participants: userId,
             admins: userId,
           },
-        })
+        });
         return res.status(200).json({
-            success:true,
-            message:`Admin removed ${participant.userName}`
-        })         
+          success: true,
+          message: "You left the group",
+        });
+      }
+
+      if (!chat.admins.some((a) => a.toString() === req.user.userId)) {
+        return res.status(403).json({
+          success: false,
+          message: "Only admins can remove the user",
+        });
+      }
+      //Admin actions
+      await chatModel.findByIdAndUpdate(chat._id, {
+        $pull: {
+          participants: userId,
+          admins: userId,
+        },
+      });
+      return res.status(200).json({
+        success: true,
+        message: `Admin removed ${participant.userName}`,
+      });
     } catch (error) {
-        res.status(500).json({
-            success:false,
-            message:"Internal server error",
-            error:error.message
-        })
+      res.status(500).json({
+        success: false,
+        message: "Internal server error",
+        error: error.message,
+      });
     }
-  });
+  },
+);
 export default router;

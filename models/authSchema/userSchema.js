@@ -33,10 +33,14 @@ const userSchema=new mongoose.Schema({
     college: {
         type:String,
         required:true,
+        trim:true,
+        minlength:[2,'College name must be at least 2 characters'],
+        maxlength:[100,'College name must not exceed 100 characters']
     },
     department: {
         type:String,
         required:true,
+        
     },
     academicYear: {
         type:Number,

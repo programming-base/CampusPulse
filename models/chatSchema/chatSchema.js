@@ -19,17 +19,17 @@ const chatSchema = new mongoose.Schema({
 
     creatorId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Users"
+        ref: "User"
     },
 
     admins: [{
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Users"
+        ref: "User"
     }],
 
     participants: [{
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Users"
+        ref: "User"
     }],
 
     lastMessage: {

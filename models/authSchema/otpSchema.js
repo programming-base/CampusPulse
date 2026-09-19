@@ -15,6 +15,9 @@ const otpSchema=new mongoose.Schema({
     },
     token:{
         type:String,
+    },
+    jti:{
+        type:String,
         required:true
     },
     otpType:{
@@ -25,7 +28,7 @@ const otpSchema=new mongoose.Schema({
     createdAt:{
         type:Date,
         default:Date.now,
-        expires:15 * 60
+        expires:10 * 60
     },
     attempts:{
         type:Number,

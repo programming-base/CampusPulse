@@ -125,7 +125,7 @@ router.post("/auth/password/verify-otp", async (req, res) => {
             },
             env.JWT.RESET,
             {
-                expiresIn: "15m",
+                expiresIn: "10m",
             }
         );
 

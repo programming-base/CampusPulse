@@ -9,7 +9,6 @@ const notificationSettingsSchema=new mongoose.Schema({
         type: Boolean,
         default: true
     },
-
     comments: {
         type: Boolean,
         default: true
