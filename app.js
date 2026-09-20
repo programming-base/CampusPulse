@@ -1,5 +1,5 @@
 import express from 'express';
-
+import cors from 'cors';
 import registrationRoute from "./routes/auth/registrationRoute.js";
 import loginRoute from './routes/auth/loginRoute.js';
 import logoutRoute from './routes/auth/logoutRoute.js';
@@ -33,13 +33,20 @@ import notificationDeleteRoute from './routes/notifications/notificationDeleteRo
 import uploadImageRoute from './routes/upload/uploadImage.js';
 import uploadProfilePicRoute from './routes/upload/uploadProfilePic.js';
 import uploadChatImageRoute from './routes/upload/uploadChatImage.js';
-
-
+import { error } from 'console';
+import env from './config/env.js'
 
 const app=express();
-
-app.use(express.urlencoded({extended:true}));
-app.use(express.json());
+const corsOptions={
+  origin:env.FRONTEND_URL,
+  credential:true,
+  optionsSuccessStatus:200,
+  methods:['GET','POST','PUT','DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}
+app.use(cors(corsOptions));
+app.use(express.urlencoded({extended:true,limit:'10mb'}));
+app.use(express.json({limit:'10mb'}));
 app.get('/',(req,res)=>{
     res.status(200).json({
       message: "API Running"
@@ -77,6 +84,27 @@ app.use('/api',notificationDeleteRoute);
 app.use('/api',uploadImageRoute);
 app.use('/api',uploadProfilePicRoute);
 app.use('/api',uploadChatImageRoute);
+
+app.use((req,res)=>{
+  res.status(404).json({
+    status:false,
+    error:'Route not found'
+  })
+})
+
+app.use((err, req, res, next) => {
+
+    console.error(err);
+    const statusCode = err.statusCode || err.status || 500;
+    const message =
+        statusCode >= 500
+            ? 'Internal server error'
+            : err.message;
+    res.status(statusCode).json({
+        success: false,
+        error: message
+    });
+});
 
 export default app;
 
