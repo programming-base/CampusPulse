@@ -9,5 +9,7 @@ DbConnect.then(() => {
         console.log(`server is running on ${env.PORT}`);
     });
 }).catch((error) => {
-    console.error('error connecting to db', error);
+    console.error('FATAL: Database connection failed', error);
+    console.error('Application cannot run without database. Exiting...')
+    process.exit(1);
 });
