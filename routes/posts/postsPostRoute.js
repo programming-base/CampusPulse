@@ -5,6 +5,7 @@ import userModel from '../../models/authSchema/userSchema.js';
 import commentModel from '../../models/postsSchema/commentSchema.js'
 import likeModel from '../../models/postsSchema/likeSchema.js';
 import postValidation from '../../middlewares/postValidation.js';
+import mongoose from 'mongoose';
 const router=express.Router();
 router.post('/posts',verifyAccessToken,async(req,res)=>{
     try{
@@ -43,11 +44,17 @@ router.post('/posts',verifyAccessToken,async(req,res)=>{
 })
 
 router.post('/posts/:postId/comments',verifyAccessToken,postValidation,async(req,res)=>{
+    const session=await mongoose.startSession();
     try{
+        session.startTransaction();
         const postId=req.post._id;
         const {content}=req.body;
         if(!content){
-            return res.status(400).json({error:'some field might be missing'})
+            await session.abortTransaction();
+            return res.status(400).json({
+                success:false,
+                error:'Some field might be missing'
+            })
         }
         
         let comment={
@@ -55,36 +62,59 @@ router.post('/posts/:postId/comments',verifyAccessToken,postValidation,async(req
             postId:postId,
             content:content,
         }
-        const createdComment=await commentModel.create(comment);
-        const incrementCommentCount=await postModel.updateOne({_id:postId},{$inc:{commentCount:1}});
-        if(incrementCommentCount.modifiedCount===0){
-            await commentModel.findByIdAndDelete(createdComment._id)
-            return res.status(500).json({error:'Internal server error '})
+        const [createdComment]=await commentModel.create([comment],{session});
+        const updatedPost=await postModel.findByIdAndUpdate(postId,{$inc:{commentCount:1}},{session,new:true});
+        if(!updatedPost){
+            await session.abortTransaction();
+            return res.status(404).json({
+                status:false,
+                error:'Post not found'
+            })
         }
-        res.status(201).json(createdComment);
+        await session.commitTransaction();
+        res.status(201).json({
+            success:true,
+            data:createdComment
+        });
 
     }catch(error){
-        return res.status(500).json({error:'Internal server error'})
+        await session.abortTransaction();
+        res.status(500).json({
+            status:false,
+            error:'Internal server error'
+        })
+    }finally{
+        session.endSession();
     }
     
 })
 
 
 router.post('/posts/:postId/like',verifyAccessToken,postValidation,async (req,res)=>{
+    const session=await mongoose.startSession();
     try{
+        session.startTransaction();
         const postId=req.post._id;
-        const alreadyLiked=await likeModel.findOne({userId:req.user.userId,targetId:postId,targetType:'post'});
-        if (alreadyLiked) return res.status(400).json({error:'Already liked'});
-        let likeStructure={
+        const alreadyLiked=await likeModel.findOne({userId:req.user.userId,targetId:postId,targetType:'post'}).session(session);
+        if (alreadyLiked) {
+            await session.abortTransaction();
+            return res.status(400).json({
+                status:false,
+                error:'Already liked'
+            })
+        }
+        let likeObj={
             targetId:postId,
             userId:req.user.userId,
             targetType:'post'
         }
-        const createdLikeStructure=await likeModel.create(likeStructure)
-        const postLikeIncreament=await postModel.findByIdAndUpdate(postId,{$inc:{likeCount:1}},{new:true})
+        const [createdLike]=await likeModel.create([likeObj],{session});
+        const postLikeIncreament=await postModel.findByIdAndUpdate(postId,{$inc:{likeCount:1}},{new:true,session})
         if(!postLikeIncreament){
-            await likeModel.findByIdAndDelete(createdLikeStructure._id)
-            return res.status(500).json({error:"Internal server error"})
+            return res.status(404).json({
+                status:false,
+                error:"Post not found"
+            })
         }
         const responseJson={
             success:true,
@@ -92,9 +122,16 @@ router.post('/posts/:postId/like',verifyAccessToken,postValidation,async (req,re
                 likeCount:postLikeIncreament.likeCount
             }
         }
+        await session.commitTransaction();
         res.status(201).json(responseJson)
     }catch(error){
-        return res.status(500).json({error:'Internal server error'})
+        await session.abortTransaction();
+        res.status(500).json({
+            status:false,
+            error:'Internal server error'
+        })
+    }finally{
+        session.endSession();
     }
 })
 export default router;
