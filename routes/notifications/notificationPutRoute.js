@@ -85,7 +85,7 @@ router.put("/notifications/settings", verifyAccessToken, async (req, res) => {
     if (Object.keys(settings).length === 0) {
       return res.status(400).json({
         success: false,
-        message: "Update feilds missing",
+        message: "Update fields missing",
       });
     }
     const updateSettings = await notificationSettingsModel.findOneAndUpdate(
