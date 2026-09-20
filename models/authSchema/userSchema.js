@@ -29,6 +29,7 @@ const userSchema=new mongoose.Schema({
     password: {
         type:String,
         required:true,
+        select:false
     },
     college: {
         type:String,
@@ -46,6 +47,31 @@ const userSchema=new mongoose.Schema({
         type:Number,
         required:true
     }
+});
+// Email lookup (login, password reset)
+userSchema.index({ email: 1 });
+
+// Username lookup (login, profile views)
+userSchema.index({ userName: 1 });
+
+// Display name search (partial match queries)
+userSchema.index({ displayName: 1 });
+
+// College-based user search
+userSchema.index({ college: 1, department: 1, academicYear: 1 });
+
+// Text search for user search feature
+userSchema.index({
+  userName: 'text',
+  displayName: 'text',
+  email: 'text'
+}, {
+  weights: {
+    userName: 10,      
+    displayName: 5,    
+    email: 1
+  },
+  name: 'user_text_search'
 });
 const userModel=mongoose.model("User",userSchema)
 export default userModel;

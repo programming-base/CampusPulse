@@ -18,4 +18,13 @@ const messageSchema = new mongoose.Schema(
   },
   { timestamps: true },
 );
+
+// Messages for chat - CRITICAL
+messageSchema.index({ chatId: 1, createdAt: -1 });
+
+// Unread message filtering
+messageSchema.index({ chatId: 1, readBy: 1 });
+
+// Sender's messages
+messageSchema.index({ sender: 1, createdAt: -1 });
 export default mongoose.model("Message", messageSchema);

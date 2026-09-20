@@ -49,5 +49,16 @@ const chatSchema = new mongoose.Schema({
 
 }, { timestamps: true });;
 
+// User's chats
+chatSchema.index({ participants: 1, lastActivity: -1 });
+
+// DM lookup 
+chatSchema.index({ type: 1, participants: 1 });
+
+// Admin lookup
+chatSchema.index({ admins: 1 });
+
 const chatModel=mongoose.model('Chat',chatSchema)
+
+
 export default chatModel;

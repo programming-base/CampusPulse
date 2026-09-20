@@ -36,5 +36,26 @@ const postSchema = new mongoose.Schema({
     },
 },{timestamps:true});
 
+// Feed query optimization - MOST CRITICAL INDEX
+postSchema.index({ 
+  college: 1, 
+  department: 1, 
+  academicYear: 1, 
+  visibilityScope: 1,
+  createdAt: -1  // -1 = descending (newest first)
+});
+
+// Alternative feed query (college-only posts)
+postSchema.index({ 
+  college: 1, 
+  visibilityScope: 1,
+  createdAt: -1 
+});
+
+// User's posts (profile page)
+postSchema.index({ userId: 1, createdAt: -1 });
+
+// Anonymous post filtering
+postSchema.index({ isAnonymous: 1, createdAt: -1 });
 const postModel=mongoose.model('Post', postSchema);
 export default postModel;

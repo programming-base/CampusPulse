@@ -23,6 +23,15 @@ const commentSchema=new mongoose.Schema({
     }
 },{timestamps:true});
 
+// At the end of commentSchema, BEFORE export:
 
+// Comments for a post (most common query)
+commentSchema.index({ postId: 1, createdAt: -1 });
+
+// User's comments (profile page)
+commentSchema.index({ userId: 1, createdAt: -1 });
+
+// Compound for post + user (check if user commented)
+commentSchema.index({ postId: 1, userId: 1 });
 const commentModel=mongoose.model('Comment',commentSchema);
 export default commentModel;

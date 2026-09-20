@@ -56,6 +56,7 @@ const notificationSchema = new mongoose.Schema(
 
 notificationSchema.index({
     recipient: 1,
+    isRead: 1,
     createdAt: -1
 });
 
