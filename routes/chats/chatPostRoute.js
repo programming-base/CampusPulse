@@ -1,10 +1,11 @@
 import express from "express";
 import verifyAccessToken from "../../middlewares/verifyAccessToken.js";
-import mongoose from "mongoose";
+import mongoose, { startSession } from "mongoose";
 import chatModel from "../../models/chatSchema/chatSchema.js";
 import messageModel from "../../models/chatSchema/messageSchema.js";
 import userModel from "../../models/authSchema/userSchema.js";
 import chatVerification from "../../middlewares/chatsMiddleware/chatVerification.js";
+import mongoose from "mongoose";
 const router = express.Router();
 
 router.post("/chats/group", verifyAccessToken, async (req, res) => {
@@ -91,94 +92,124 @@ router.post("/chats/group", verifyAccessToken, async (req, res) => {
   }
 });
 
-// message document creation for chat
 router.post(
   "/chats/dm/messages/:userId",
   verifyAccessToken,
   async (req, res) => {
+    const session = await mongoose.startSession();
+
     try {
+      session.startTransaction();
+
       const { userId } = req.params;
       const messageData = req.body;
+
       if (!messageData.text?.trim()) {
+        await session.abortTransaction();
         return res.status(400).json({
           success: false,
           message: "Message text is required",
         });
       }
+
       if (!mongoose.Types.ObjectId.isValid(userId)) {
+        await session.abortTransaction();
         return res.status(400).json({
           success: false,
-          message: "Invalid chat ID or user ID",
+          message: "Invalid user ID",
         });
       }
-      const user = await userModel.findById(userId);
+
+      const user = await userModel.findById(userId).session(session);
       if (!user) {
+        await session.abortTransaction();
         return res.status(400).json({
           success: false,
-          message: "user does not exist",
+          message: "User does not exist",
         });
       }
+
       let chat = await chatModel.findOne({
         type: "dm",
         participants: {
           $all: [req.user.userId, userId],
         },
-      });
+      }).session(session);
 
       if (!chat) {
-        const newChat = await chatModel.create({
-          type: "dm",
-          participants: [req.user.userId, userId],
-        });
-
+        // Destructure array to get the document
+        const [newChat] = await chatModel.create(
+          [{
+            type: "dm",
+            participants: [req.user.userId, userId],
+          }],
+          { session }
+        );
         chat = newChat;
       }
-      const message = await messageModel.create({
-        chatId: chat._id,
-        sender: req.user.userId,
-        text: messageData.text,
-        type: messageData.type,
-      });
+
+      // Create message (destructure array)
+      const [message] = await messageModel.create(
+        [{
+          chatId: chat._id,
+          sender: req.user.userId,
+          text: messageData.text,
+          type: messageData.type,
+        }],
+        { session }
+      );
+
+      // Update chat with last message
       const updateChat = await chatModel.findByIdAndUpdate(
         chat._id,
         {
           $set: {
             lastMessage: message._id,
+            lastActivity: Date.now()
           },
+          $inc: { messageCount: 1 }
         },
-        { new: true },
+        { new: true, session }
       );
+
       if (!updateChat) {
-        await messageModel.findByIdAndDelete(message._id);
-        return res.status(404).json({
-          success: false,
-          message: "Chat does not exist",
-        });
+        throw new Error("Chat does not exist");
       }
+      await session.commitTransaction();
+
       res.status(201).json({
         success: true,
         data: message,
       });
+
     } catch (error) {
+      await session.abortTransaction();
+      console.error("Create message error:", error);
+
       res.status(500).json({
         success: false,
         message: "Internal server error",
         error: error.message,
       });
+    } finally {
+      session.endSession();
     }
-  },
+  }
 );
 
 //message document creation for group chat
 router.post(
-  "/chats/:chatId/messages",
+  "/chats/groupchat/:chatId/messages",
   verifyAccessToken,
   chatVerification,
   async (req, res) => {
+    const session=await mongoose.startSession();
     try {
+      session.startTransaction();
       //Request body check
       const messageData = req.body;
       if (!messageData.text?.trim()) {
+        await session.abortTransaction();
         return res.status(400).json({
           success: false,
           message: "Message text is required",
@@ -191,18 +222,36 @@ router.post(
         text: messageData.text,
         type: messageData.type,
       };
-      const message = await messageModel.create(messageObject);
 
+      const [message] = await messageModel.create([messageObject],{session});
+
+      const updateChat=await chatModel.findByIdAndUpdate(
+        req.chat._id,
+        {
+          $set: {
+            lastMessage: message._id,
+            lastActivity: Date.now()
+          },
+          $inc: { messageCount: 1 } 
+        },{new:true,session}
+      );
+      if(!updateChat){
+        throw new Error("Chat does not exist")
+      }
+      await session.commitTransaction();
       res.status(201).json({
         success: true,
         data: message,
       });
-    } catch (error) {
+    }catch (error) {
+      await session.abortTransaction();
       res.status(500).json({
         success: false,
         message: "Internal server error",
         error: error.message,
-      });
+      })
+    }finally{
+      session.endSession();
     }
   },
 );
@@ -212,6 +261,7 @@ router.post(
   verifyAccessToken,
   chatVerification,
   async (req, res) => {
+    
     try {
       const { messageId } = req.params;
       if (!mongoose.Types.ObjectId.isValid(messageId)) {
@@ -345,7 +395,7 @@ router.post(
             message: "Please choose Admin first",
           });
         }
-        const updatedChat =await chatModel.findByIdAndUpdate(req.chat._id, {
+        const updatedChat = await chatModel.findByIdAndUpdate(req.chat._id, {
           $pull: {
             participants: req.user.userId,
             admins: req.user.userId,
